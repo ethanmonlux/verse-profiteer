@@ -4,11 +4,12 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-29 — UEX proxy done (merged to main, production-confirmed). Session closed.
+2026-05-29 — v0.1 route planner shipped (lib/routePlanner.ts, /api/routes, home-page table, unit tests). Session closed.
 
 ## Current state
 
 - Repo scaffolded and deployed to Vercel (verse-profiteer.vercel.app). Next.js 16 / React 19 / Tailwind v4 (note: NOT Next 14 — the addendum’s code snippets predate this; verify framework APIs against installed version, see AGENTS.md).
+- v0.1 route planner SHIPPED: lib/routePlanner.ts (pure planRoutes — cartesian buy×sell per commodity, ranked by profit/unit, default top 50); typed CommodityPriceRecord interface in lib/uex.ts; /api/routes GET handler; home page (app/page.tsx) server component rendering the route table with stale-leg warnings (date_modified > 30d → text-warning). Unit tests in lib/routePlanner.test.ts (vitest, 8 cases). Pending verification: v0.1 ranking math (see VERIFICATIONS.md).
 - UEX proxy DONE + verified: lib/uex.ts (single data-access module) + app/api/commodities/route.ts. Returns commodities_prices_all as a JSON array. Env-presence + response-shape guards in place. 5-min fetch cache (next: { revalidate: 300 } — was accepted by Next 16 lint/typecheck; confirm caching actually engages if traffic ever pressures the 120/min cap).
 - Env vars set in Vercel (Production + Preview): UEX_BASE_URL=<https://api.uexcorp.uk/2.0>, UEX_API_TOKEN (marked Sensitive).
 
@@ -31,11 +32,11 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-0 code verifications pending. UEX proxy verification COMPLETED. 2 calibration runs parked (open when travel-time wiring merges).
+1 code verification pending (v0.1 route planner ranking math — see VERIFICATIONS.md). UEX proxy verification COMPLETED. 2 calibration runs parked (open when travel-time wiring merges).
 
 ## Next likely step
 
-v0.1 route planner (TODO Major, NEXT). DESIGN-SPEC — requires propose → operator explain-back → prompts. Core logic: pair low price_buy vs high price_sell across terminals per commodity, generate candidate routes, rank by marginal profit per stop. Data layer is proven ready. Keep monetization untouched while paused.
+Travel-time wiring (TODO Major) — distance-pair collection from candidate routes, terminals_distances fetch, travelTimeMinutes integration into ranking. Requires propose → operator explain-back → prompts. Keep monetization untouched while paused.
 
 ## Merge state
 

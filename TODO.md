@@ -13,9 +13,9 @@ New items in priority order. Completed items move to the bottom, organized by or
 
 ## Major
 
-- v0.1 route planner (NEXT) — from the commodities_prices_all feed, pair low price_buy vs high price_sell across terminals per commodity, generate candidate routes, rank by marginal profit per stop. DESIGN-SPEC: needs propose → operator explain-back → prompt flow. Data layer confirmed able to feed this (2,581 records, both market sides, 122 commodities).
 - Travel time wiring — distance-pair collection from candidate routes, terminals_distances fetch, travelTimeMinutes integration.
 - Staleness gating — AMENDED: commodities_prices_all does NOT include a game_version field (confirmed against live feed 2026-05-29). Gate on date_modified threshold only for this endpoint; surface in UI as warnings not silent skips. Revisit game_version if/when an endpoint that carries it is used (e.g. vehicles_rentals_prices does include game_version).
+- User price overrides — let players submit the live in-game price they see standing at a terminal, overriding the UEX feed value for ranking. Rationale: UEX has no game API; prices are crowdsourced from players screenshotting terminals (e.g. Datarunner OCR), so a feed price is only as fresh as the last player to visit and report that terminal — backwater terminals go stale (some date_modified cells are months old). The player at the terminal now is the freshest possible source. DESIGN-SPEC, v0.2+: new data source feeding ranking math (state-sensitive) plus a new trust surface. Open questions: storage (ties to the parked Railway+DB option), conflict rule (user vs feed — newer wins? user always wins?), per-user vs shared, override staleness/expiry, whether to write back to UEX. Do NOT fold into v0.1.
 
 ## Minor
 
@@ -43,6 +43,8 @@ New items in priority order. Completed items move to the bottom, organized by or
 ### Critical
 
 ### Major
+
+- v0.1 route planner — from the commodities_prices_all feed, pair low price_buy vs high price_sell across terminals per commodity, generate candidate routes, rank by marginal profit per stop. Shipped: lib/routePlanner.ts, /api/routes, route-table UI on home page, unit tests.
 
 ### Minor
 

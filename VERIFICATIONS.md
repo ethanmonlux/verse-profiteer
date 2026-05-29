@@ -11,7 +11,7 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-(none)
+- v0.1 route planner ranking math (`lib/routePlanner.ts` + `/api/routes` + `page.tsx`) — verify the planner's top route for a known commodity matches a hand-computed answer. Anchor: Aluminum, cheapest buy Rod's Fuel 2584, highest sell Dudley & Daughters 4000, expected profit/unit 1416. Confirm no phantom routes from price 0 cells, and that stale legs (date_modified > 30d) surface a warning in the UI. [Fill date + outcome when run.]
 
 ## Pending — Calibration Runs
 
