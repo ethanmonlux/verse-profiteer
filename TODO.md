@@ -1,4 +1,4 @@
-# TODO.md — SC Cargo Tool
+# TODO.md — verse-profiteer
 
 Severity: Blocker (broken, blocks usage) / Critical (significant gap, affects correctness or security) / Major (should ship soon) / Minor (nice to have) / Chore (maintenance, docs, cleanup).
 New items in priority order. Completed items move to the bottom, organized by original severity — never left checked inline.
@@ -9,33 +9,31 @@ New items in priority order. Completed items move to the bottom, organized by or
 
 ## Critical
 
-- IP / monetization viability — RESOLVE BEFORE ANY PAYWALL WORK. CIG’s Fankit/Fandom FAQ (support.robertsspaceindustries.com, checked 2026-05) explicitly lists prohibited uses including for-profit, paywalls, donations, fundraising, and “games of any kind,” and states no licenses are offered. The fan-film YouTube-ad carve-out does not extend to tools. A Patreon paid tier on an SC-centered tool sits against this list; “donations” being named also closes the free-tool-plus-tip hatch. Operator decision required: (a) keep tool free / non-commercial, (b) seek written permission from CIG, or (c) accept revocation risk knowingly. Not legal advice — consider counsel before flipping a paywall. This gates the entire Patreon-readiness block below.
+- IP / monetization viability — RESOLVE BEFORE ANY PAYWALL WORK. Status: PAUSED by operator. CIG’s Fankit/Fandom FAQ (checked 2026-05) lists prohibited uses incl. for-profit, paywalls, donations. Established peers (UEX, Shebuka’s Datarunner) run a DONATION model instead: tool fully free, supporters get cosmetic/recognition perks only (badge, name in credits), no feature gating. That’s the viable path if monetization resumes — paywalling the differentiator features is the one model peers specifically avoid. Operator decision still required before any monetization work; not legal advice.
 
 ## Major
 
-- v0.1 route planner — bulk pull commodities_prices_all, candidate route generation, marginal-profit ranking
-- Travel time wiring — distance-pair collection from candidate routes, terminals_distances fetch, travelTimeMinutes integration
-- Staleness gating — date_modified threshold + game_version major.minor check, surfaced in UI as warnings not silent skips
+- v0.1 route planner (NEXT) — from the commodities_prices_all feed, pair low price_buy vs high price_sell across terminals per commodity, generate candidate routes, rank by marginal profit per stop. DESIGN-SPEC: needs propose → operator explain-back → prompt flow. Data layer confirmed able to feed this (2,581 records, both market sides, 122 commodities).
+- Travel time wiring — distance-pair collection from candidate routes, terminals_distances fetch, travelTimeMinutes integration.
+- Staleness gating — AMENDED: commodities_prices_all does NOT include a game_version field (confirmed against live feed 2026-05-29). Gate on date_modified threshold only for this endpoint; surface in UI as warnings not silent skips. Revisit game_version if/when an endpoint that carries it is used (e.g. vehicles_rentals_prices does include game_version).
 
 ## Minor
 
-- Rental ROI card (addendum §C) — stretch goal, gate on price_rent_* presence + staleness
-- Dual-host curl test for UEX_BASE_URL — confirm .uk vs .space at session start
-- Patreon-readiness checklist (BLOCKED on Critical IP/monetization item above — do not begin until resolved):
+- Rental ROI card (addendum §C) — stretch goal, gate on price_rent_* presence + staleness. Note: rentals endpoint DOES carry game_version, unlike commodities.
+- Patreon-readiness checklist (BLOCKED on Critical IP/monetization item; PAUSED — do not begin until resumed and resolved):
+  - If donation model: supporter badge / name-in-credits / cosmetic perks only — NO feature gates.
   - Server-side Patreon OAuth flow (no client-side token handling)
-  - Tier mapping (free / paid tiers → feature gates)
   - Webhook handler for membership changes (cancel, downgrade, fail-charge)
-  - Rate-limit posture review — confirm 120/min headroom across expected concurrent paid users
-  - Refund policy + ToS copy referencing data-staleness disclaimers
-  - “Numbers can be wrong / SC patches reshuffle economy” disclaimer on every ROI surface
+  - Rate-limit posture review — confirm 120/min headroom across expected concurrent users
+  - Disclaimers: data-staleness + “numbers can be wrong / SC patches reshuffle economy” on every ROI/profit surface
   - Privacy policy covering Patreon identifier storage
   - Required CIG attribution/disclaimer + Fankit terms compliance on any public surface
-- Per-ship QT speeds — only if calibration shows fast/slow ships consistently misranked
+- Per-ship QT speeds — only if calibration shows fast/slow ships consistently misranked.
+- Surface richer per-record fields the feed already returns but the proxy passes through untyped: status_buy / status_sell, SCU inventory, system split (Stanton/Pyro), quality/CS. Route planner will decide which feed ranking.
 
 ## Chore
 
 - README with screenshots + setup instructions
-- .env.example with UEX_BASE_URL and UEX_API_TOKEN placeholders
 - LICENSE file
 
 ## Completed
@@ -48,4 +46,8 @@ New items in priority order. Completed items move to the bottom, organized by or
 
 ### Minor
 
+- Dual-host curl test for UEX_BASE_URL — 2026-05-29. Folded into proxy verification: /api/commodities returned live data with .uk host, so .uk confirmed working; .space fallback not needed.
+
 ### Chore
+
+- .env.example with UEX_BASE_URL and UEX_API_TOKEN placeholders — done in scaffold (Prompt 1).
