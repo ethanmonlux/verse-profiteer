@@ -40,4 +40,4 @@ v0.1 route planner (TODO Major, NEXT). DESIGN-SPEC — requires propose → oper
 ## Merge state
 
 - Proxy merged to main and confirmed: /api/commodities returns live data on the production deploy (verified 2026-05-29). UEX proxy meets the full Done Definition.
-- Branch model note: operator is merging CC session branches directly into main for now (no develop layer while solo). This diverges from the develop → main model in the project instructions — see open question.
+- Branch model: operator merges CC session branches directly into main (no develop layer while solo). Diverges from any develop -> main wording; CLAUDE.md and project instructions updated to match.
