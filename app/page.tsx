@@ -24,66 +24,48 @@ export default async function Home() {
         Top cargo trade routes · sorted by profit per unit
       </p>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="min-w-full text-sm bg-bg-card">
-          <thead>
-            <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wide">
-              <th className="px-4 py-3 text-left whitespace-nowrap">Commodity</th>
-              <th className="px-4 py-3 text-left whitespace-nowrap">Buy terminal</th>
-              <th className="px-4 py-3 text-right whitespace-nowrap">Buy price</th>
-              <th className="px-4 py-3 text-left whitespace-nowrap">Sell terminal</th>
-              <th className="px-4 py-3 text-right whitespace-nowrap">Sell price</th>
-              <th className="px-4 py-3 text-right whitespace-nowrap">Profit / unit</th>
-              <th className="px-4 py-3 text-right whitespace-nowrap">Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {routes.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-text-muted">
-                  No routes available.
-                </td>
-              </tr>
-            ) : (
-              routes.map((route) => {
-                const { label, stale } = relativeAge(route.oldestDateModified);
-                return (
-                  <tr
-                    key={`${route.commodityId}-${route.buyTerminalId}-${route.sellTerminalId}`}
-                    className="border-b border-border last:border-b-0"
-                  >
-                    <td className="px-4 py-3 font-medium whitespace-nowrap">
-                      {route.commodityName}
-                    </td>
-                    <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-                      {route.buyTerminal}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
+      {routes.length === 0 ? (
+        <p className="text-center text-text-muted">No routes available.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {routes.map((route) => {
+            const { label, stale } = relativeAge(route.oldestDateModified);
+            return (
+              <div
+                key={`${route.commodityId}-${route.buyTerminalId}-${route.sellTerminalId}`}
+                className="rounded-lg border border-border bg-bg-card p-4"
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <span className="font-semibold">{route.commodityName}</span>
+                  <span className="text-profit font-bold text-lg tabular-nums">
+                    +{route.profitPerUnit.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex flex-wrap items-start gap-x-2 gap-y-1">
+                  <div>
+                    <div className="text-sm text-text-muted">{route.buyTerminal}</div>
+                    <div className="text-xs text-text-muted tabular-nums">
                       {route.priceBuy.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-                      {route.sellTerminal}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
+                    </div>
+                  </div>
+                  <span className="text-sm text-text-muted self-center">→</span>
+                  <div>
+                    <div className="text-sm text-text-muted">{route.sellTerminal}</div>
+                    <div className="text-xs text-text-muted tabular-nums">
                       {route.priceSell.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-profit whitespace-nowrap">
-                      +{route.profitPerUnit.toLocaleString()}
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-right tabular-nums whitespace-nowrap ${
-                        stale ? "text-warning" : "text-text-muted"
-                      }`}
-                    >
-                      {label}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`mt-2 text-xs ${stale ? "text-warning" : "text-text-muted"}`}>
+                  Updated {label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </main>
   );
 }
