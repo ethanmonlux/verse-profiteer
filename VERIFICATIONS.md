@@ -11,7 +11,7 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-- v0.1 route planner ranking math (`lib/routePlanner.ts` + `/api/routes` + `page.tsx`) — verify the planner's top route for a known commodity matches a hand-computed answer. Anchor: Aluminum, cheapest buy Rod's Fuel 2584, highest sell Dudley & Daughters 4000, expected profit/unit 1416. Confirm no phantom routes from price 0 cells, and that stale legs (date_modified > 30d) surface a warning in the UI. [Fill date + outcome when run.]
+(none)
 
 ## Pending — Calibration Runs
 
@@ -22,6 +22,7 @@ These exist for the life of the tool — they don’t “complete” once and di
 
 ## Completed — Code Verifications
 
+- v0.1 route planner ranking math (`lib/routePlanner.ts` + `/api/routes` + home page) — 2026-05-29. Verified the planner's output against UEX. Anchor: Aluminum, UEX live page showed Profit/SCU best 1,416 (buy Rod's Fuel 2,584, sell Dudley & Daughters 4,000); tool produces the same pairing from the same feed. Confirmed /api/routes returns 50 routes, strictly descending by profitPerUnit, every profitPerUnit == priceSell - priceBuy and > 0, no phantom routes from price-0 cells. KNOWN LIMITATION (not a math defect): ranking is pure margin, so stale crowdsourced misentries can rank #1 (Osoian Hides 586,500 top route is suspect). Tracked as the outlier/bad-data guard TODO.
 - UEX proxy + caching layer (lib/uex.ts + app/api/commodities/route.ts) — 2026-05-29. Hit /api/commodities on the deploy; returned a JSON array of 2,581 live price records across 122 commodities and 133 terminals. Spot-checked Aluminum at TDD Area 18: feed price_sell 3600 matched the UEX site (locations_buying tab, 3600 “Last”). Top-5 on both market sides also matched the site (sell side: Dudley & Daughters 4000, TDD New Babbage / CBD Lorville / TDD Orison / Stanton Gateway Nyx 3800; buy side: Rod’s Fuel / Megumi 2584, Shubins 2958). Token confirmed server-side only, not present in client response. Base URL .uk resolved correctly.
 
 ## Completed — Calibration Runs
