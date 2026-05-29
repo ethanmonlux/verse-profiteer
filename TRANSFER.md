@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-29 — UEX proxy built, hardened, deployed, verified.
+2026-05-29 — UEX proxy done (merged to main, production-confirmed). Session closed.
 
 ## Current state
 
@@ -39,4 +39,5 @@ v0.1 route planner (TODO Major, NEXT). DESIGN-SPEC — requires propose → oper
 
 ## Merge state
 
-- Proxy meets Done Definition except final merge: confirm develop → main merge happened and production deploy shows /api/commodities returning data before treating as fully done.
+- Proxy merged to main and confirmed: /api/commodities returns live data on the production deploy (verified 2026-05-29). UEX proxy meets the full Done Definition.
+- Branch model note: operator is merging CC session branches directly into main for now (no develop layer while solo). This diverges from the develop → main model in the project instructions — see open question.
