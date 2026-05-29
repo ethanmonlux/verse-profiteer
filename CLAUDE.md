@@ -20,7 +20,4 @@ All UEX data access goes through a single module (`lib/uex.ts`) so the caching/f
 
 ## Branch Model
 
-- `develop` → preview deployments on Vercel.
-- `main` → production deployment on Vercel.
-
-Both branches auto-deploy on push.
+Solo workflow: CC writes to a session branch; operator merges it directly into `main`. No `develop` layer at this time. `main` = production, auto-deploys on Vercel on push. Revisit adding `develop` → preview if the project grows past solo.
