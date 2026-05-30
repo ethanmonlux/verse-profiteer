@@ -1,0 +1,51 @@
+"use client";
+
+import { useState } from "react";
+
+export default function DebugRoutes({ idCommodity }: { idCommodity: number }) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState<unknown>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleClick() {
+    const nextOpen = !open;
+    setOpen(nextOpen);
+
+    if (nextOpen && data === null) {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/verify?id_commodity=${idCommodity}`);
+        const json = await res.json();
+        setData(json);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    }
+  }
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={handleClick}
+        className="text-xs text-text-muted"
+      >
+        {"{ } raw"}
+      </button>
+      {open && (
+        <div>
+          {loading && <p className="text-xs text-text-muted">Loading…</p>}
+          {error && <p className="text-xs text-text-muted">{error}</p>}
+          {!loading && !error && data !== null && (
+            <pre className="text-xs text-text-muted overflow-auto max-h-80 mt-2">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
