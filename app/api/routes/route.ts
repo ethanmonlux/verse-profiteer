@@ -1,15 +1,10 @@
-import { getCommodityPricesAll } from "@/lib/uex";
-import { planRoutes } from "@/lib/routePlanner";
+import { getTopRoutes } from "@/lib/routes";
 
 export async function GET() {
   try {
-    const data = await getCommodityPricesAll();
-    const routes = planRoutes(data);
+    const routes = await getTopRoutes();
     return Response.json(routes);
   } catch {
-    return Response.json(
-      { error: "Failed to plan routes" },
-      { status: 502 }
-    );
+    return Response.json({ error: "Failed to load routes" }, { status: 502 });
   }
 }
