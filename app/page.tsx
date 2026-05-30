@@ -34,14 +34,10 @@ export default async function Home() {
                 className="rounded-lg border border-border bg-bg-card p-4"
               >
                 <div className="flex justify-between items-start gap-2">
-                  <span className="font-semibold">{group.commodityName}</span>
+                  <span className="font-semibold text-accent">{group.commodityName}</span>
                   <span className="text-profit font-bold text-lg tabular-nums">
                     +{group.routes[0].profit.toLocaleString()}
                   </span>
-                </div>
-
-                <div className="mt-2 flex flex-wrap items-start gap-x-2 gap-y-1">
-                  <span className="text-sm text-text-muted">{group.routes[0].distance} Gm</span>
                 </div>
 
                 <div className="mt-2 flex flex-col gap-1">
