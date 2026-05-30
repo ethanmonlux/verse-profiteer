@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-30 — commodities_routes integration session. lib/routes.ts shipped, grouped-card board live, v0.1 planner and spike retired. One verification closed (Atlasium, 2026-05-30). Zero Pending verifications.
+2026-05-30 — CI + branch-model session. GitHub Actions CI live (.github/workflows/ci.yml). PR-into-main flow adopted; CI is the merge signal. No enforced branch protection.
 
 ## Current state
 
@@ -13,6 +13,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - commodities_routes integration SHIPPED + verified: lib/routes.ts (shortlistCommodities + getTopRoutes), /api/routes serving UEX route data, grouped-card board on app/page.tsx (top 10 commodities, top 3 routes each, sorted by best-route profit). Verified against UEX (Atlasium, 2026-05-30).
 - v0.1 planner RETIRED: planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts removed. Verification entry remains in VERIFICATIONS.md as historical record.
 - Investigation spike DELETED: getCommodityRoutes spike code and /api/routes-spike removed.
+- GitHub Actions CI LIVE: .github/workflows/ci.yml — lint + typecheck + test on every PR into main and on push. PR-into-main flow now in effect; CI green/red on the PR is the merge signal.
 
 ## The pivot (why, and what it means)
 
@@ -48,9 +49,8 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 ## Next likely step
 
 Next tasks in priority order:
-1. GitHub Actions CI on push to main (APPROVED) — npm ci + lint + typecheck + test on every push. Authoritative gate; CC's local lint/typecheck is unreliable without node_modules.
-2. Debug verify-button — tappable way to fetch raw UEX commodities_routes for a commodity and compare against the board. Gating approach (dev-only vs env-gated) to be decided in its design-spec.
-3. Route-count guard — flag and downrank commodities with <=1-2 profitable routes. Live test case: Osoian Hides at rank 6, single route. Design-spec needed, state-sensitive, REVIEW + VERIFY.
+1. Debug verify-button — tappable way to fetch raw UEX commodities_routes for a commodity and compare against the board. Gating approach (dev-only vs env-gated) to be decided in its design-spec.
+2. Route-count guard — flag and downrank commodities with <=1-2 profitable routes. Live test case: Osoian Hides at rank 6, single route. Design-spec needed, state-sensitive, REVIEW + VERIFY.
 
 New backlog from user research (see TODO.md Major):
 - Profit-per-hour ranking (strongly user-validated; depends on travel-time constants)
@@ -63,4 +63,5 @@ New backlog from user research (see TODO.md Major):
 - commodities_routes integration merged to main and production-confirmed (2026-05-30). Grouped-card board live.
 - v0.1 planner retired and removed.
 - Spike endpoints (/api/routes-spike, getCommodityRoutes) deleted.
-- Branch model: operator merges CC session branches directly into main (no develop layer while solo).
+- GitHub Actions CI live (2026-05-30). PR-into-main flow in effect.
+- Branch model: operator opens PR from CC session branch into main; CI runs; merge when green. No develop layer while solo. No enforced branch protection.

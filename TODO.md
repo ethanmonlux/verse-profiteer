@@ -21,8 +21,6 @@ New items in priority order. Completed items move to the bottom, organized by or
 - Profit per SCU display — surface per-SCU profit on each route row alongside total profit. Data already available from commodities_routes. Repeatedly requested by users (per-SCU breakdown, per-stop profit).
 - Multi-leg loop / chain routing — plan trade chains where each leg's sell terminal is the next leg's buy point, minimizing empty legs, showing full-loop total profit. This is a graph/pathfinding feature over the route data, not a tweak to the current board; needs its own design-spec. User-requested ('full rundown of the loop', 'fly to your next good location').
   - Note — Crowding caveat: experienced haulers deliberately avoid the most-surfaced routes (they get stripped/contested). Consider this when designing how prominently top routes are ranked/surfaced; a 'less contested' view may be worth offering.
-- GitHub Actions CI on push to main — run npm ci + lint + typecheck + test on every push, as the authoritative gate. CC's local lint/typecheck is unreliable in environments without node_modules; CI is the backstop that can't be bypassed. No PR step required.
-
 ## Minor
 
 - Capital-aware ranking — largely provided by UEX (investment field on commodities_routes). Remaining: expose and filter on investment + player SCU capacity.
@@ -42,6 +40,7 @@ New items in priority order. Completed items move to the bottom, organized by or
 - Surface richer per-record fields the feed already returns but the proxy passes through untyped: status_buy / status_sell, SCU inventory, system split (Stanton/Pyro), quality/CS. Route planner will decide which feed ranking.
 - Shortlist over-fetch tuning — getTopRoutes fetches top 20 candidates but displays top 10; the gap is intentional buffer to absorb guard-rejected commodities (e.g. Osoian Hides) without starving the visible board. Once the route-count guard proves the bad set is small/stable, revisit tightening 20 toward ~15. Gated on guard landing.
 - Debug verify endpoint + verify-button — a tappable way to fetch raw UEX commodities_routes for a commodity and compare against the board, removing the manual UEX-website verification step. Gating approach (dev-only vs env-gated) to be decided in its design-spec.
+- Enforced branch protection (require green CI to merge) — optional hardening if the project grows past solo.
 
 ## Chore
 
@@ -64,6 +63,7 @@ New items in priority order. Completed items move to the bottom, organized by or
 
 ### Major
 
+- GitHub Actions CI — .github/workflows/ci.yml; triggers on PR into main and on push; lint + typecheck + test as separate named steps; actions/checkout@v6 + setup-node@v6 (Node 20, npm cache). Adopted PR-into-main flow; CI status is the merge signal (no enforced branch protection).
 - Wire commodities_routes integration — lib/routes.ts (shortlistCommodities + getTopRoutes), /api/routes serving UEX route data, grouped-card board (top 10 commodities, top 3 routes each, sorted by best-route profit). planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts, and /api/routes-spike retired. Verified against UEX (Atlasium, 2026-05-30).
 - v0.1 route planner — from the commodities_prices_all feed, pair low price_buy vs high price_sell across terminals per commodity, generate candidate routes, rank by marginal profit per stop. Shipped: lib/routePlanner.ts, /api/routes, route-table UI on home page, unit tests.
 
