@@ -1,6 +1,11 @@
-import { describe, it, expect } from "vitest";
-import { shortlistCommodities } from "@/lib/routes";
-import type { CommodityPriceRecord } from "@/lib/uex";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { shortlistCommodities, getTopRoutes } from "@/lib/routes";
+import type { CommodityPriceRecord, CommodityRoute } from "@/lib/uex";
+
+vi.mock("@/lib/uex", () => ({
+  getCommodityPricesAll: vi.fn(),
+  getCommodityRoutes: vi.fn(),
+}));
 
 function rec(
   overrides: Pick<CommodityPriceRecord, "id_commodity" | "price_buy" | "price_sell">
@@ -133,5 +138,185 @@ describe("shortlistCommodities", () => {
     const result = shortlistCommodities(records, 10);
     expect(result).toEqual([42]);
     expect(typeof result[0]).toBe("number");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getTopRoutes — mocked UEX layer
+// ---------------------------------------------------------------------------
+
+import { getCommodityPricesAll, getCommodityRoutes } from "@/lib/uex";
+
+const mockGetPrices = getCommodityPricesAll as ReturnType<typeof vi.fn>;
+const mockGetRoutes = getCommodityRoutes as ReturnType<typeof vi.fn>;
+
+function priceRec(
+  id_commodity: number,
+  commodity_name: string,
+  price_buy: number,
+  price_sell: number
+): CommodityPriceRecord {
+  return {
+    id: 0,
+    id_commodity,
+    id_terminal: 0,
+    commodity_name,
+    terminal_name: "",
+    price_buy,
+    price_sell,
+    price_buy_avg: 0,
+    price_sell_avg: 0,
+    scu_buy: 0,
+    scu_sell: 0,
+    scu_buy_avg: 0,
+    scu_sell_avg: 0,
+    scu_sell_stock: 0,
+    scu_sell_stock_avg: 0,
+    status_buy: 0,
+    status_sell: 0,
+    quality: 0,
+    container_sizes: "",
+    date_modified: 0,
+    date_added: 0,
+  };
+}
+
+function route(id: number, id_commodity: number, profit: number): CommodityRoute {
+  return {
+    id,
+    id_commodity,
+    origin_terminal_name: `Origin-${id}`,
+    destination_terminal_name: `Dest-${id}`,
+    id_terminal_origin: 0,
+    id_terminal_destination: 0,
+    price_margin: 0,
+    price_roi: 0,
+    profit,
+    investment: 0,
+    distance: 1,
+    scu_origin: 0,
+    scu_destination: 0,
+    scu_margin: 0,
+    volatility_origin: 0,
+    volatility_destination: 0,
+    status_origin: 0,
+    status_destination: 0,
+    score: 0,
+    date_added: 0,
+  };
+}
+
+// Two commodities with valid buy/sell so both are shortlisted.
+const basePrices: CommodityPriceRecord[] = [
+  priceRec(1, "Agricium", 100, 0),
+  priceRec(1, "Agricium", 0, 300),
+  priceRec(2, "Laranite", 50, 0),
+  priceRec(2, "Laranite", 0, 200),
+];
+
+describe("getTopRoutes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns one group per commodity with no duplicates", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(id === 1 ? [route(101, 1, 500)] : [route(201, 2, 300)])
+    );
+
+    const groups = await getTopRoutes();
+    const ids = groups.map((g) => g.id_commodity);
+    expect(ids).toHaveLength(new Set(ids).size);
+    expect(ids).toContain(1);
+    expect(ids).toContain(2);
+  });
+
+  it("sorts each group's routes by profit descending and caps at 3", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1 gets 4 routes in arbitrary order; expect top-3 sorted desc.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1
+          ? [route(101, 1, 200), route(102, 1, 500), route(103, 1, 100), route(104, 1, 400)]
+          : [route(201, 2, 50)]
+      )
+    );
+
+    const groups = await getTopRoutes();
+    const g1 = groups.find((g) => g.id_commodity === 1)!;
+    expect(g1.routes).toHaveLength(3);
+    expect(g1.routes[0].profit).toBe(500);
+    expect(g1.routes[1].profit).toBe(400);
+    expect(g1.routes[2].profit).toBe(200);
+  });
+
+  it("sorts groups by best route profit descending", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 2 has a better best route than commodity 1.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1 ? [route(101, 1, 300)] : [route(201, 2, 700)]
+      )
+    );
+
+    const groups = await getTopRoutes();
+    expect(groups[0].id_commodity).toBe(2);
+    expect(groups[1].id_commodity).toBe(1);
+  });
+
+  it("caps output at 10 groups", async () => {
+    // Build 12 commodities, each with a valid buy/sell so they all shortlist.
+    const manyPrices: CommodityPriceRecord[] = [];
+    for (let i = 1; i <= 12; i++) {
+      manyPrices.push(priceRec(i, `Commodity ${i}`, 100, 0));
+      manyPrices.push(priceRec(i, `Commodity ${i}`, 0, 200));
+    }
+    mockGetPrices.mockResolvedValue(manyPrices);
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve([route(id * 100, id, id * 10)])
+    );
+
+    const groups = await getTopRoutes();
+    expect(groups.length).toBeLessThanOrEqual(10);
+  });
+
+  it("populates commodityName from prices feed", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve([route(id * 100, id, 100)])
+    );
+
+    const groups = await getTopRoutes();
+    const g1 = groups.find((g) => g.id_commodity === 1)!;
+    expect(g1.commodityName).toBe("Agricium");
+    const g2 = groups.find((g) => g.id_commodity === 2)!;
+    expect(g2.commodityName).toBe("Laranite");
+  });
+
+  it("falls back to `Commodity ${id}` when commodity_name is absent", async () => {
+    // Price records for id 3 have no commodity_name.
+    const prices = [
+      priceRec(3, "", 100, 0),
+      priceRec(3, "", 0, 250),
+    ];
+    mockGetPrices.mockResolvedValue(prices);
+    mockGetRoutes.mockResolvedValue([route(301, 3, 100)]);
+
+    const groups = await getTopRoutes();
+    expect(groups[0].commodityName).toBe("Commodity 3");
+  });
+
+  it("produces no group for a commodity whose routes array is empty", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1 returns routes; commodity 2 returns none.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(id === 1 ? [route(101, 1, 500)] : [])
+    );
+
+    const groups = await getTopRoutes();
+    const ids = groups.map((g) => g.id_commodity);
+    expect(ids).toContain(1);
+    expect(ids).not.toContain(2);
   });
 });
