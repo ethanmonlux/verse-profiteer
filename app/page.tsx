@@ -1,5 +1,4 @@
-import { getCommodityPricesAll } from "@/lib/uex";
-import { planRoutes } from "@/lib/routePlanner";
+import { getTopRoutes } from "@/lib/routes";
 
 function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
   const diffSec = Math.floor(Date.now() / 1000) - unixSeconds;
@@ -14,8 +13,7 @@ function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
 }
 
 export default async function Home() {
-  const prices = await getCommodityPricesAll();
-  const routes = planRoutes(prices);
+  const routes = await getTopRoutes();
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-8">
@@ -29,33 +27,25 @@ export default async function Home() {
       ) : (
         <div className="flex flex-col gap-3">
           {routes.map((route) => {
-            const { label, stale } = relativeAge(route.oldestDateModified);
+            const { label, stale } = relativeAge(route.date_added);
+            const routeLabel =
+              route.origin_terminal_name && route.destination_terminal_name
+                ? `${route.origin_terminal_name} → ${route.destination_terminal_name}`
+                : `Route ${route.id}`;
             return (
               <div
-                key={`${route.commodityId}-${route.buyTerminalId}-${route.sellTerminalId}`}
+                key={route.id}
                 className="rounded-lg border border-border bg-bg-card p-4"
               >
                 <div className="flex justify-between items-start gap-2">
-                  <span className="font-semibold">{route.commodityName}</span>
+                  <span className="font-semibold">{routeLabel}</span>
                   <span className="text-profit font-bold text-lg tabular-nums">
-                    +{route.profitPerUnit.toLocaleString()}
+                    +{route.profit.toLocaleString()}
                   </span>
                 </div>
 
                 <div className="mt-2 flex flex-wrap items-start gap-x-2 gap-y-1">
-                  <div>
-                    <div className="text-sm text-text-muted">{route.buyTerminal}</div>
-                    <div className="text-xs text-text-muted tabular-nums">
-                      {route.priceBuy.toLocaleString()}
-                    </div>
-                  </div>
-                  <span className="text-sm text-text-muted self-center">→</span>
-                  <div>
-                    <div className="text-sm text-text-muted">{route.sellTerminal}</div>
-                    <div className="text-xs text-text-muted tabular-nums">
-                      {route.priceSell.toLocaleString()}
-                    </div>
-                  </div>
+                  <span className="text-sm text-text-muted">{route.distance} Gm</span>
                 </div>
 
                 <div className={`mt-2 text-xs ${stale ? "text-warning" : "text-text-muted"}`}>
