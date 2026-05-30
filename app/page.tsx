@@ -1,4 +1,5 @@
 import { getTopRoutes } from "@/lib/routes";
+import DebugRoutes from "@/app/DebugRoutes";
 
 function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
   const diffSec = Math.floor(Date.now() / 1000) - unixSeconds;
@@ -58,6 +59,7 @@ export default async function Home() {
                 <div className={`mt-2 text-xs ${stale ? "text-warning" : "text-text-muted"}`}>
                   Updated {label}
                 </div>
+                <DebugRoutes idCommodity={group.id_commodity} />
               </div>
             );
           })}

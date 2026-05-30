@@ -11,7 +11,7 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-(none)
+- Route-count guard (`lib/routes.ts` + `app/page.tsx`) — verify on live deploy that Osoian Hides is quarantined below all healthy commodities with the 'single route — unverified' label, and that the healthy top of the board is unchanged in order.
 
 ## Pending — Calibration Runs
 
