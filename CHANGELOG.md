@@ -11,7 +11,16 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 
 ### Changed
 
+- Replaced the local route planner with UEX commodities_routes integration. New `lib/routes.ts` (`shortlistCommodities` + `getTopRoutes`) selects top-margin commodity candidates from the cached prices feed, fetches real UEX routes for those candidates, and ranks by realizable profit.
+- Routes board now renders one card per commodity (top 3 routes each, origin → destination + profit), sorted by best-route profit, showing the top 10 commodities.
+
+### Removed
+
+- Retired `planRoutes`, the `Route` interface, `lib/routePlanner.ts`, `lib/routePlanner.test.ts`, and the `/api/routes-spike` endpoint.
+
 ### Fixed
+
+- Fixed commodity name visibility on cards and removed the unexplained distance line pending travel-time work.
 
 ## [0.1.0] — [date]
 

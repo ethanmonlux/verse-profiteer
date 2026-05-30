@@ -4,14 +4,15 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-29 — ARCHITECTURE PIVOT session. Decided to consume UEX's commodities_routes instead of computing routes locally. TODO.md and CLAUDE.md updated to match. No production code merged this session beyond a throwaway investigation spike (see below).
+2026-05-30 — commodities_routes integration session. lib/routes.ts shipped, grouped-card board live, v0.1 planner and spike retired. One verification closed (Atlasium, 2026-05-30). Zero Pending verifications.
 
 ## Current state
 
 - Repo deployed to Vercel (verse-profiteer.vercel.app). Next.js 16 / React 19 / Tailwind v4 (NOT Next 14 — verify framework APIs against installed version, see AGENTS.md).
 - UEX proxy DONE + verified: lib/uex.ts (single data-access module) + app/api/commodities/route.ts, returns commodities_prices_all. Env/token/base-URL guards in place, 5-min fetch cache.
-- v0.1 route planner SHIPPED + verified (lib/routePlanner.ts planRoutes, /api/routes, card UI on app/page.tsx, 8 vitest cases). NOTE: this is being RETIRED by the pivot — see below. Code still present; not yet removed.
-- INVESTIGATION SPIKE present in repo (throwaway, not a permanent feature): getCommodityRoutes + CommodityRoute interface in lib/uex.ts, and app/api/routes-spike/route.ts. Built to probe UEX's commodities_routes signals. It works (deployed, returns data). It should be folded into the real integration or deleted — do not treat it as finished product.
+- commodities_routes integration SHIPPED + verified: lib/routes.ts (shortlistCommodities + getTopRoutes), /api/routes serving UEX route data, grouped-card board on app/page.tsx (top 10 commodities, top 3 routes each, sorted by best-route profit). Verified against UEX (Atlasium, 2026-05-30).
+- v0.1 planner RETIRED: planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts removed. Verification entry remains in VERIFICATIONS.md as historical record.
+- Investigation spike DELETED: getCommodityRoutes spike code and /api/routes-spike removed.
 
 ## The pivot (why, and what it means)
 
@@ -42,14 +43,24 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-0 code verifications pending. 2 calibration runs parked (open when travel-time wiring merges). NOTE: the commodities_routes integration and the route-count guard will EACH need a Pending entry when their design-specs are built — neither is started yet.
+0 code verifications pending. 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md). Route-count guard will need a Pending entry when its design-spec is built.
 
 ## Next likely step
 
-Build the commodities_routes integration design-spec (APPROVED, not started): promote getCommodityRoutes from spike to production core, rework /api/routes to serve UEX route data, retire planRoutes + tests. State-sensitive, REVIEW + VERIFY, escalates to operator. THEN: route-count guard on top of it. THEN: the redesign (operator wants a Good Omen-style instrument-panel look — goodomentrading.com/performance as reference — replacing the current bordered-card UI). Keep monetization untouched while paused.
+Next tasks in priority order:
+1. GitHub Actions CI on push to main (APPROVED) — npm ci + lint + typecheck + test on every push. Authoritative gate; CC's local lint/typecheck is unreliable without node_modules.
+2. Debug verify-button — tappable way to fetch raw UEX commodities_routes for a commodity and compare against the board. Gating approach (dev-only vs env-gated) to be decided in its design-spec.
+3. Route-count guard — flag and downrank commodities with <=1-2 profitable routes. Live test case: Osoian Hides at rank 6, single route. Design-spec needed, state-sensitive, REVIEW + VERIFY.
+
+New backlog from user research (see TODO.md Major):
+- Profit-per-hour ranking (strongly user-validated; depends on travel-time constants)
+- Profit per SCU display (data already available from commodities_routes; repeatedly requested)
+- Multi-leg loop / chain routing (graph/pathfinding feature; needs own design-session; crowding caveat noted)
 
 ## Merge state
 
-- Proxy + v0.1 planner merged to main and production-confirmed (2026-05-29). v0.1 planner pending retirement by the pivot.
-- Spike endpoints (/api/routes-spike, getCommodityRoutes) are in the repo and deployed but are throwaway investigation code, not finished features.
+- Proxy merged to main and production-confirmed (2026-05-29).
+- commodities_routes integration merged to main and production-confirmed (2026-05-30). Grouped-card board live.
+- v0.1 planner retired and removed.
+- Spike endpoints (/api/routes-spike, getCommodityRoutes) deleted.
 - Branch model: operator merges CC session branches directly into main (no develop layer while solo).
