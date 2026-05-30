@@ -29,10 +29,14 @@ export function shortlistCommodities(records: CommodityPriceRecord[], n: number)
 const SHORTLIST_SIZE = 20;
 const DISPLAY_COUNT = 10;
 
+// Start at 1 (only single-route commodities, e.g. Osoian Hides). Route count is a weak proxy — see Outlier guard v2 in TODO. Do not loosen without that work.
+const ROUTE_COUNT_MIN = 1;
+
 export interface CommodityRouteGroup {
   id_commodity: number;
   commodityName: string;
   routes: CommodityRoute[];
+  quarantined: boolean;
 }
 
 export async function getTopRoutes(): Promise<CommodityRouteGroup[]> {
@@ -51,6 +55,7 @@ export async function getTopRoutes(): Promise<CommodityRouteGroup[]> {
   const groups: CommodityRouteGroup[] = [];
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i];
+    const routeCount = routeArrays[i].length;
     const sorted = routeArrays[i].slice().sort((a, b) => b.profit - a.profit);
     const top3 = sorted.slice(0, 3);
     if (top3.length === 0) continue;
@@ -58,9 +63,13 @@ export async function getTopRoutes(): Promise<CommodityRouteGroup[]> {
       id_commodity: id,
       commodityName: nameMap.get(id) ?? `Commodity ${id}`,
       routes: top3,
+      quarantined: routeCount <= ROUTE_COUNT_MIN,
     });
   }
 
-  groups.sort((a, b) => b.routes[0].profit - a.routes[0].profit);
+  groups.sort((a, b) => {
+    if (a.quarantined !== b.quarantined) return a.quarantined ? 1 : -1;
+    return b.routes[0].profit - a.routes[0].profit;
+  });
   return groups.slice(0, DISPLAY_COUNT);
 }
