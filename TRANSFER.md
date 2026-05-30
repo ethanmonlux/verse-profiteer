@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-30 — CI + branch-model session. GitHub Actions CI live (.github/workflows/ci.yml). PR-into-main flow adopted; CI is the merge signal. No enforced branch protection.
+2026-05-30 — route-count guard + debug verify-button session. Integration-era queue closed (CI, verify-button, guard all shipped). Route-count guard pending live verification of the Osoian Hides case before entry moves to Completed.
 
 ## Current state
 
@@ -14,6 +14,8 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - v0.1 planner RETIRED: planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts removed. Verification entry remains in VERIFICATIONS.md as historical record.
 - Investigation spike DELETED: getCommodityRoutes spike code and /api/routes-spike removed.
 - GitHub Actions CI LIVE: .github/workflows/ci.yml — lint + typecheck + test on every PR into main and on push. PR-into-main flow now in effect; CI green/red on the PR is the merge signal.
+- Route-count guard SHIPPED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. PENDING live verification that Osoian Hides is correctly isolated on the deploy (see VERIFICATIONS.md Pending).
+- Debug verify-button SHIPPED (ungated raw UEX passthrough): `app/api/verify/route.ts` (GET endpoint) + `app/DebugRoutes.tsx` (per-card `{ } raw` toggle client island). Marked TEMPORARY DEBUG SURFACE — strip or gate before public launch / monetization unpause.
 
 ## The pivot (why, and what it means)
 
@@ -44,18 +46,18 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-0 code verifications pending. 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md). Route-count guard will need a Pending entry when its design-spec is built.
+1 code verification pending: route-count guard (Osoian Hides isolation on live deploy — see VERIFICATIONS.md). 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md).
 
 ## Next likely step
 
-Next tasks in priority order:
-1. Debug verify-button — tappable way to fetch raw UEX commodities_routes for a commodity and compare against the board. Gating approach (dev-only vs env-gated) to be decided in its design-spec.
-2. Route-count guard — flag and downrank commodities with <=1-2 profitable routes. Live test case: Osoian Hides at rank 6, single route. Design-spec needed, state-sensitive, REVIEW + VERIFY.
+Integration-era queue closed (CI ✓, verify-button ✓, guard ✓). Immediate:
+1. Live-verify route-count guard on deploy — confirm Osoian Hides is quarantined with the 'single route — unverified' label and healthy board order is unchanged. Move VERIFICATIONS.md Pending entry to Completed once confirmed.
 
-New backlog from user research (see TODO.md Major):
-- Profit-per-hour ranking (strongly user-validated; depends on travel-time constants)
-- Profit per SCU display (data already available from commodities_routes; repeatedly requested)
-- Multi-leg loop / chain routing (graph/pathfinding feature; needs own design-session; crowding caveat noted)
+Next backlog in priority order (see TODO.md Major):
+- Travel time wiring — prerequisite for profit-per-hour ranking (distance field already available from commodities_routes).
+- Profit-per-hour ranking (strongly user-validated; depends on travel-time constants).
+- Profit per SCU display (data already available from commodities_routes; repeatedly requested).
+- Multi-leg loop / chain routing (graph/pathfinding feature; needs own design-session; crowding caveat noted).
 
 ## Merge state
 
