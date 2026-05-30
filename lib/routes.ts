@@ -29,11 +29,38 @@ export function shortlistCommodities(records: CommodityPriceRecord[], n: number)
 const SHORTLIST_SIZE = 20;
 const DISPLAY_COUNT = 10;
 
-export async function getTopRoutes(): Promise<CommodityRoute[]> {
+export interface CommodityRouteGroup {
+  id_commodity: number;
+  commodityName: string;
+  routes: CommodityRoute[];
+}
+
+export async function getTopRoutes(): Promise<CommodityRouteGroup[]> {
   const prices = await getCommodityPricesAll();
   const ids = shortlistCommodities(prices, SHORTLIST_SIZE);
+
+  const nameMap = new Map<number, string>();
+  for (const r of prices) {
+    if (!nameMap.has(r.id_commodity) && r.commodity_name) {
+      nameMap.set(r.id_commodity, r.commodity_name);
+    }
+  }
+
   const routeArrays = await Promise.all(ids.map((id) => getCommodityRoutes(id)));
-  const all = routeArrays.flat();
-  all.sort((a, b) => b.profit - a.profit);
-  return all.slice(0, DISPLAY_COUNT);
+
+  const groups: CommodityRouteGroup[] = [];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const sorted = routeArrays[i].slice().sort((a, b) => b.profit - a.profit);
+    const top3 = sorted.slice(0, 3);
+    if (top3.length === 0) continue;
+    groups.push({
+      id_commodity: id,
+      commodityName: nameMap.get(id) ?? `Commodity ${id}`,
+      routes: top3,
+    });
+  }
+
+  groups.sort((a, b) => b.routes[0].profit - a.routes[0].profit);
+  return groups.slice(0, DISPLAY_COUNT);
 }
