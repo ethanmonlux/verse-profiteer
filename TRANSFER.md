@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — doc pass. Route-count guard shipped (threshold <=1, quarantine-and-label), pending live Osoian Hides verification. Outlier guard v2 (SCU / origin-count) logged as the real follow-up in TODO.md Major. Integration-era queue closed (CI, verify-button, guard all shipped). 1 code verification pending.
+2026-05-31 — doc pass. Copy button + prices debug button shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, DebugRoutes/DebugPrices including copy). Route-count guard still pending mechanical verification — verify against whatever commodity next trips the badge, not Osoian specifically (market churn moves the shortlist). Outlier guard v2 (SCU-based) remains the real follow-up: live E'tam data (44 routes across 3 origins, profit driven by scu_origin 67 vs 22 vs 7) confirms route count is a weak proxy and SCU is the right signal. 1 code verification pending.
 
 ## Current state
 
@@ -15,7 +15,8 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - Investigation spike DELETED: getCommodityRoutes spike code and /api/routes-spike removed.
 - GitHub Actions CI LIVE: .github/workflows/ci.yml — lint + typecheck + test on every PR into main and on push. PR-into-main flow now in effect; CI green/red on the PR is the merge signal.
 - Route-count guard SHIPPED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. PENDING live verification that Osoian Hides is correctly isolated on the deploy (see VERIFICATIONS.md Pending). Outlier guard v2 (SCU / origin-count signals) logged as the real follow-up — see TODO.md Major.
-- Debug verify-button SHIPPED (ungated raw UEX passthrough): `app/api/verify/route.ts` (GET endpoint) + `app/DebugRoutes.tsx` (per-card `{ } raw` toggle client island). Marked TEMPORARY DEBUG SURFACE — strip or gate before public launch / monetization unpause.
+- Debug verify-button SHIPPED (ungated raw UEX passthrough): `app/api/verify/route.ts` (GET endpoint) + `app/DebugRoutes.tsx` (per-card `{ } raw` toggle client island) + copy-to-clipboard button on the route panel. Marked TEMPORARY DEBUG SURFACE.
+- Debug prices button SHIPPED: `app/api/verify-prices/route.ts` (GET endpoint, returns raw commodities_prices_all array) + `app/DebugPrices.tsx` (`{ } prices` toggle, rendered below the subhead on the home page). Marked TEMPORARY DEBUG SURFACE. Strip-before-public trigger now covers all three surfaces: /api/verify (raw routes), /api/verify-prices (raw prices feed), and both debug buttons including copy — before public launch / monetization unpause.
 
 ## The pivot (why, and what it means)
 
@@ -46,7 +47,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-1 code verification pending: route-count guard (Osoian Hides isolation on live deploy — see VERIFICATIONS.md). 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md).
+1 code verification pending: route-count guard (verify against whatever commodity next trips the badge — Osoian Hides is no longer a reliable anchor; see VERIFICATIONS.md). 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md).
 
 ## Next likely step
 
@@ -54,7 +55,7 @@ Integration-era queue closed (CI ✓, verify-button ✓, guard ✓). Immediate:
 1. Live-verify route-count guard on deploy — confirm Osoian Hides is quarantined with the 'single route — unverified' label and healthy board order is unchanged. Move VERIFICATIONS.md Pending entry to Completed once confirmed.
 
 Next backlog in priority order (see TODO.md Major):
-- Outlier guard v2 — design session for SCU / origin-count trust signals (route-count is a weak proxy; see TODO.md Major for full rationale). Schedule after live Osoian verification passes.
+- Outlier guard v2 — design session for SCU / origin-count trust signals (route-count is a weak proxy; live E'tam data confirms it: 44 routes across 3 origins, profit driven by scu_origin 67 vs 22 vs 7 — SCU is the right signal). Schedule after live route-count guard verification passes.
 - Travel time wiring — prerequisite for profit-per-hour ranking (distance field already available from commodities_routes).
 - Profit-per-hour ranking (strongly user-validated; depends on travel-time constants).
 - Profit per SCU display (data already available from commodities_routes; repeatedly requested).

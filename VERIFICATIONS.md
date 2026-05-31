@@ -11,7 +11,7 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-- Route-count guard (`lib/routes.ts` + `app/page.tsx`) — verify on live deploy that Osoian Hides is quarantined below all healthy commodities with the 'single route — unverified' label, and that the healthy top of the board is unchanged in order.
+- Route-count guard (`lib/routes.ts` + `app/page.tsx`) — verify on live deploy that the 'single route — unverified' badge appears and sorts correctly. Verification plan: when any card shows the badge, tap its { } raw and confirm the raw array has exactly 1 route, badge shown, card sorted below all healthy commodities. Note: Osoian Hides is no longer a reliable anchor (market churn moves which commodities shortlist hour to hour); verify against whatever commodity next trips the badge.
 
 ## Pending — Calibration Runs
 
