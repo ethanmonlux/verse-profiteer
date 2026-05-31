@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — shipped travel-time wiring + profit-per-SCU (both display-only, math verified against raw data); travel-time calibration OPEN but deferred; ship-capacity scaling queued as next Major.
+2026-05-31 — shipped ship-capacity scaling (display-only realizable profit, three-way min, verification PENDING); found a shortlist available-SCU bug (folded into outlier guard v2); logged competitor anti-pattern + realizable-profit floor + ship-picker/flip-money backlog.
 
 ## Current state
 
@@ -19,6 +19,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - Route-count guard SHIPPED + VERIFIED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. Verified 2026-05-30 via raw-data audit (Osoian Hides correctly isolated; see VERIFICATIONS.md Completed). Outlier guard v2 (SCU / origin-count signals) logged as the real follow-up — see TODO.md Major.
 - Debug verify-button SHIPPED (ungated raw UEX passthrough): `app/api/verify/route.ts` (GET endpoint) + `app/DebugRoutes.tsx` (per-card `{ } raw` toggle client island) + copy-to-clipboard button on the route panel. Marked TEMPORARY DEBUG SURFACE.
 - Debug prices button SHIPPED: `app/api/verify-prices/route.ts` (GET endpoint, returns raw commodities_prices_all array) + `app/DebugPrices.tsx` (`{ } prices` toggle, rendered below the subhead on the home page). Marked TEMPORARY DEBUG SURFACE. Strip-before-public trigger now covers all three surfaces: /api/verify (raw routes), /api/verify-prices (raw prices feed), and both debug buttons including copy — before public launch / monetization unpause.
+- Ship-capacity scaling SHIPPED (lib/realizableProfit.ts realizableProfit + routeBottleneck; board split into server + app/Board.tsx client with in-memory capacity input; per-row realizable + cap indicator; ≤-total-profit invariant tested). Display-only, ranking unchanged. Verification PENDING (state-sensitive) — see VERIFICATIONS.md.
 
 ## The pivot (why, and what it means)
 
@@ -49,7 +50,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-0 code verifications pending; 1 calibration run OPEN but deferred (travel-time constants); 1 parked (per-ship QT). Note next step = ship-capacity scaling (DESIGN-SPEC).
+1 code verification PENDING (ship-capacity scaling); 1 calibration run OPEN but deferred (travel-time); 1 parked (per-ship QT).
 
 ## Next likely step
 
