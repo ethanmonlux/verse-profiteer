@@ -9,6 +9,17 @@ export default function DebugRoutes({ idCommodity }: { idCommodity: number }) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  function handleDownload(filename: string) {
+    if (data === null) return;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleCopy() {
     if (data === null) return;
     try {
@@ -55,6 +66,9 @@ export default function DebugRoutes({ idCommodity }: { idCommodity: number }) {
             <>
               <button onClick={handleCopy} className="text-xs text-text-muted mt-2">
                 {copied ? "copied" : "copy"}
+              </button>
+              <button onClick={() => handleDownload(`routes-${idCommodity}.json`)} className="text-xs text-text-muted mt-2 ml-2">
+                download
               </button>
               <pre className="text-xs text-text-muted overflow-auto max-h-80 mt-2">
                 {JSON.stringify(data, null, 2)}
