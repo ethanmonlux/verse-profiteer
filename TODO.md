@@ -24,6 +24,7 @@ New items in priority order. Completed items move to the bottom, organized by or
 ## Minor
 
 - Range model v2 — replace the flat ESTIMATE_BAND_PCT with per-constant min/max that propagate, so band width emerges from which constants are uncertain (load-heavy routes get wider bands). Earned once calibration data exists; flat band is the v1 stopgap.
+- Fuel cost as net-profit refinement — UEX exposes fuel_prices / fuel_prices_all. Quantum fuel burn scales with distance, so a long QT run has a real fuel cost not currently subtracted from profit. Pairs naturally with the travel-time model. Evaluate once travel-time constants are calibrated.
 - Capital-aware ranking — largely provided by UEX (investment field on commodities_routes). Remaining: expose and filter on investment + player SCU capacity.
 - Custom filters layer — filter UEX routes by origin terminal, ship/SCU capacity, capital, and time. UEX commodities_routes input params (id_terminal_origin, investment, destination) back this. The chat-box plugs in here. v0.2+.
 - Chat-box route planner — natural-language input ('I have X ship, X credits, X time, at X station') parsed to UEX route params by an LLM; deterministic ranking stays in code. Depends on the filters layer and overrides. v0.2+.
@@ -57,6 +58,7 @@ New items in priority order. Completed items move to the bottom, organized by or
 - Load/unload is a real per-SCU time cost (e.g. ~6-8 min for 696 SCU); belongs with travel-time constants for profit-per-hour.
 - commodities_status endpoint rows decode status_origin/status_destination for display; commodities_prices_history available if route-count corroboration ever needs deepening.
 - Architecture pivot: tool consumes commodities_routes rather than computing routes from commodities_prices_all. The v0.1 planRoutes ranker is being retired; its verification entry remains in VERIFICATIONS.md as historical record.
+- ~~commodities_ranking endpoint is deprecated/disabled upstream~~ ❌ (struck through with error icon on the live UEX index, 2026-05-31) — not callable. Would not be used regardless: ranking stays in code for determinism (UEX score was already struck as a trust signal). Do not look for it.
 
 ## Completed
 
@@ -66,7 +68,7 @@ New items in priority order. Completed items move to the bottom, organized by or
 
 ### Major
 
-- Travel time wiring — lib/travelTime.ts shipped; point estimate + flat-band range displayed per route, four constants + band seeded pending calibration, inputs distance/scu_origin free from commodities_routes. Display-only, ranking unchanged. Constants require in-game wall-clock calibration (see VERIFICATIONS.md).
+- Travel time wiring — lib/travelTime.ts shipped; point estimate + flat-band range displayed per route, four constants + band seeded pending calibration, inputs distance/scu_origin free from commodities_routes. Display-only, ranking unchanged. Constants require in-game wall-clock calibration (see VERIFICATIONS.md). Verified 2026-05-31 that the estimator math matches raw route data (E'tam id 29, Dymantium id 127) and discriminates correctly on distance.
 - Route-count guard — shipped as route-count isolation at threshold <=1, quarantine-and-label. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. Verified against the live Osoian Hides case 2026-05-30 (single route, correctly isolated; healthy board order unchanged).
 - GitHub Actions CI — .github/workflows/ci.yml; triggers on PR into main and on push; lint + typecheck + test as separate named steps; actions/checkout@v6 + setup-node@v6 (Node 20, npm cache). Adopted PR-into-main flow; CI status is the merge signal (no enforced branch protection).
 - Wire commodities_routes integration — lib/routes.ts (shortlistCommodities + getTopRoutes), /api/routes serving UEX route data, grouped-card board (top 10 commodities, top 3 routes each, sorted by best-route profit). planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts, and /api/routes-spike retired. Verified against UEX (Atlasium, 2026-05-30).
