@@ -33,7 +33,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
           id="ship-capacity"
           type="number"
           min={1}
-          className="w-24 rounded border border-border bg-bg-card px-2 py-1 text-sm tabular-nums"
+          className="w-24 rounded border border-border bg-bg-card px-2 py-1 text-sm tabular-nums text-accent placeholder:text-text-muted focus:outline-none focus:border-accent"
           value={capacityStr}
           onChange={(e) => setCapacityStr(e.target.value)}
           placeholder="—"
@@ -82,12 +82,12 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                           <div className="flex items-center gap-3">
                             <span className="text-sm text-text-muted tabular-nums">{min}–{max} min</span>
                             <span className="text-sm text-text-muted tabular-nums">{pps.toLocaleString()}/SCU</span>
-                            <span className="text-sm tabular-nums">+{realizable.toLocaleString()}</span>
-                            <span className="text-sm tabular-nums">+{route.profit.toLocaleString()}</span>
+                            <span className="text-sm tabular-nums text-profit">+{realizable.toLocaleString()} realizable</span>
+                            <span className="text-xs tabular-nums text-text-muted">of +{route.profit.toLocaleString()} total</span>
                           </div>
                         </div>
                         {showCapIndicator && (
-                          <span className="text-xs text-text-muted">caps at {bottleneck} SCU</span>
+                          <span className="text-xs text-warning tabular-nums">⚠ route caps at {bottleneck} SCU — hold not filled</span>
                         )}
                       </div>
                     );

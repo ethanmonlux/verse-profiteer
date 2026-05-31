@@ -11,7 +11,7 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-(none)
+- Ship-capacity scaling (lib/realizableProfit.ts + app/Board.tsx) — state-sensitive (changes acted-on profit numbers). Method: on the deploy, enter a known ship capacity below a route's bottleneck and confirm realizable scales down to round(profitPerScu × capacity); enter a capacity above the bottleneck and confirm realizable equals the route's total profit (never exceeds it) and the "caps at N SCU" indicator fires. Spot-check one route by hand against the raw feed. Not done until this passes and moves to Completed.
 
 ## Pending — Calibration Runs
 
