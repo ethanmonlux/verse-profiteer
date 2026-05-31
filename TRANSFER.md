@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — doc pass. Both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; download added this session. Standing convention recorded in CLAUDE.md: future debug data-pull surfaces ship with both affordances from the start. Copy buttons on both debug panels and the { } prices debug surface shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, the two buttons including download); route-count guard still pending mechanical verification (any badged commodity, not Osoian specifically); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Remaining Pending verification count: 1 (the guard).
+2026-05-31 — doc pass. Both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; download added this session. Standing convention recorded in CLAUDE.md: future debug data-pull surfaces ship with both affordances from the start. Copy buttons on both debug panels and the { } prices debug surface shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, the two buttons including download); route-count guard verified 2026-05-30 via raw-data audit (now in VERIFICATIONS.md Completed); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Pending Code Verifications: 0. 2 calibration runs remain parked (open when travel-time wiring merges).
 
 ## Current state
 
@@ -47,15 +47,12 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-1 code verification pending: route-count guard (verify against whatever commodity next trips the badge — Osoian Hides is no longer a reliable anchor; see VERIFICATIONS.md). 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md).
+0 code verifications pending. 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md).
 
 ## Next likely step
 
-Integration-era queue closed (CI ✓, verify-button ✓, guard ✓). Immediate:
-1. Live-verify route-count guard on deploy — confirm Osoian Hides is quarantined with the 'single route — unverified' label and healthy board order is unchanged. Move VERIFICATIONS.md Pending entry to Completed once confirmed.
-
-Next backlog in priority order (see TODO.md Major):
-- Outlier guard v2 — design session for SCU / origin-count trust signals (route-count is a weak proxy; live E'tam data confirms it: 44 routes across 3 origins, profit driven by scu_origin 67 vs 22 vs 7 — SCU is the right signal). Schedule after live route-count guard verification passes.
+Integration-era queue closed (CI ✓, verify-button ✓, guard ✓, guard-verified ✓). Next backlog in priority order (see TODO.md Major):
+- Outlier guard v2 — design session for SCU / origin-count trust signals (route-count is a weak proxy; live E'tam data confirms it: 44 routes across 3 origins, profit driven by scu_origin 67 vs 22 vs 7 — SCU is the right signal).
 - Travel time wiring — prerequisite for profit-per-hour ranking (distance field already available from commodities_routes).
 - Profit-per-hour ranking (strongly user-validated; depends on travel-time constants).
 - Profit per SCU display (data already available from commodities_routes; repeatedly requested).
