@@ -4,13 +4,15 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — travel-time wiring shipped: lib/travelTime.ts (point estimate + flat-band range per route), display-only, four calibration constants + ESTIMATE_BAND_PCT seeded, no new UEX calls, estimator math verified against raw route data (E'tam id 29, Dymantium id 127), calibration now open (see VERIFICATIONS.md). Doc pass: both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; standing convention recorded in CLAUDE.md; route-count guard verified 2026-05-30 via raw-data audit (now in VERIFICATIONS.md Completed); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Pending Code Verifications: 0. 1 calibration run OPEN (travel-time constants), 1 still parked (per-ship QT).
+2026-05-31 — shipped travel-time wiring + profit-per-SCU (both display-only, math verified against raw data); travel-time calibration OPEN but deferred; ship-capacity scaling queued as next Major.
 
 ## Current state
 
 - Repo deployed to Vercel (verse-profiteer.vercel.app). Next.js 16 / React 19 / Tailwind v4 (NOT Next 14 — verify framework APIs against installed version, see AGENTS.md).
 - UEX proxy DONE + verified: lib/uex.ts (single data-access module) + app/api/commodities/route.ts, returns commodities_prices_all. Env/token/base-URL guards in place, 5-min fetch cache.
 - commodities_routes integration SHIPPED + verified: lib/routes.ts (shortlistCommodities + getTopRoutes), /api/routes serving UEX route data, grouped-card board on app/page.tsx (top 10 commodities, top 3 routes each, sorted by best-route profit). Verified against UEX (Atlasium, 2026-05-30).
+- Travel-time estimate SHIPPED: lib/travelTime.ts (estimateTravelMinutes + estimateTravelRange), point estimate + flat-band range per route row, four calibration constants + ESTIMATE_BAND_PCT seeded as uncalibrated guesses, inputs distance/scu_origin free from commodities_routes — no new UEX calls. Display-only; ranking unchanged. Estimator math verified 2026-05-31 against raw routes (E'tam id 29, Dymantium id 127). Unit tests in lib/travelTime.test.ts. Calibration OPEN but deferred by operator (see VERIFICATIONS.md Pending).
+- Profit-per-SCU SHIPPED: lib/profitPerScu.ts (profitPerScu = profit / scu_origin, divide-by-zero guarded, rounded to whole credits), compact {value}/SCU per route row. Divisor verified against asymmetric-SCU routes. Display-only; ranking unchanged. Math verified 2026-05-31 against raw (E'tam id 29). Unit tests in lib/profitPerScu.test.ts.
 - v0.1 planner RETIRED: planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts removed. Verification entry remains in VERIFICATIONS.md as historical record.
 - Investigation spike DELETED: getCommodityRoutes spike code and /api/routes-spike removed.
 - GitHub Actions CI LIVE: .github/workflows/ci.yml — lint + typecheck + test on every PR into main and on push. PR-into-main flow now in effect; CI green/red on the PR is the merge signal.
@@ -47,15 +49,14 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-0 code verifications pending; 1 calibration run now OPEN (travel-time constants), 1 still parked (per-ship QT).
+0 code verifications pending; 1 calibration run OPEN but deferred (travel-time constants); 1 parked (per-ship QT). Note next step = ship-capacity scaling (DESIGN-SPEC).
 
 ## Next likely step
 
-Integration-era queue closed (CI ✓, verify-button ✓, guard ✓, guard-verified ✓). Next backlog in priority order (see TODO.md Major):
+Travel-time and profit-per-SCU shipped this session. Next backlog in priority order (see TODO.md Major):
+- Ship-capacity scaling (DESIGN-SPEC, state-sensitive) — add ship-capacity input, show realizable profit = profitPerScu × min(capacity, scu_origin, scu_destination), cap indicator when bottleneck is below capacity. Resolves the per-SCU vs total-profit contradiction visible in the live board.
 - Outlier guard v2 — design session for SCU / origin-count trust signals (route-count is a weak proxy; live E'tam data confirms it: 44 routes across 3 origins, profit driven by scu_origin 67 vs 22 vs 7 — SCU is the right signal).
-- Travel time wiring — prerequisite for profit-per-hour ranking (distance field already available from commodities_routes).
-- Profit-per-hour ranking (strongly user-validated; depends on travel-time constants).
-- Profit per SCU display (data already available from commodities_routes; repeatedly requested).
+- Profit-per-hour ranking (strongly user-validated; depends on travel-time constants being calibrated).
 - Multi-leg loop / chain routing (graph/pathfinding feature; needs own design-session; crowding caveat noted).
 
 ## Merge state
