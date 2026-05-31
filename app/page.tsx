@@ -2,6 +2,7 @@ import { getTopRoutes } from "@/lib/routes";
 import DebugRoutes from "@/app/DebugRoutes";
 import DebugPrices from "@/app/DebugPrices";
 import { estimateTravelRange } from "@/lib/travelTime";
+import { profitPerScu } from "@/lib/profitPerScu";
 
 function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
   const diffSec = Math.floor(Date.now() / 1000) - unixSeconds;
@@ -56,11 +57,13 @@ export default async function Home() {
                         ? `${route.origin_terminal_name} → ${route.destination_terminal_name}`
                         : `Route ${route.id}`;
                     const { min, max } = estimateTravelRange(route);
+                    const pps = profitPerScu(route);
                     return (
                       <div key={route.id} className="flex justify-between items-center gap-2">
                         <span className="text-sm text-text-muted">{routeLabel}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-text-muted tabular-nums">{min}–{max} min</span>
+                          <span className="text-sm text-text-muted tabular-nums">{pps.toLocaleString()}/SCU</span>
                           <span className="text-sm tabular-nums">+{route.profit.toLocaleString()}</span>
                         </div>
                       </div>
