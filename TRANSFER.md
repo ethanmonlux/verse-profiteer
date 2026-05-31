@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — travel-time wiring shipped: lib/travelTime.ts (point estimate + flat-band range per route), display-only, four calibration constants + ESTIMATE_BAND_PCT seeded, no new UEX calls, calibration now open (see VERIFICATIONS.md). Doc pass: both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; standing convention recorded in CLAUDE.md; route-count guard verified 2026-05-30 via raw-data audit (now in VERIFICATIONS.md Completed); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Pending Code Verifications: 0. 1 calibration run OPEN (travel-time constants), 1 still parked (per-ship QT).
+2026-05-31 — travel-time wiring shipped: lib/travelTime.ts (point estimate + flat-band range per route), display-only, four calibration constants + ESTIMATE_BAND_PCT seeded, no new UEX calls, estimator math verified against raw route data (E'tam id 29, Dymantium id 127), calibration now open (see VERIFICATIONS.md). Doc pass: both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; standing convention recorded in CLAUDE.md; route-count guard verified 2026-05-30 via raw-data audit (now in VERIFICATIONS.md Completed); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Pending Code Verifications: 0. 1 calibration run OPEN (travel-time constants), 1 still parked (per-ship QT).
 
 ## Current state
 
