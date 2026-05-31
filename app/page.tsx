@@ -35,7 +35,12 @@ export default async function Home() {
                 className="rounded-lg border border-border bg-bg-card p-4"
               >
                 <div className="flex justify-between items-start gap-2">
-                  <span className="font-semibold text-accent">{group.commodityName}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-accent">{group.commodityName}</span>
+                    {group.quarantined && (
+                      <span className="text-xs text-warning">single route — unverified</span>
+                    )}
+                  </div>
                   <span className="text-profit font-bold text-lg tabular-nums">
                     +{group.routes[0].profit.toLocaleString()}
                   </span>

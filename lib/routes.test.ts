@@ -319,4 +319,92 @@ describe("getTopRoutes", () => {
     expect(ids).toContain(1);
     expect(ids).not.toContain(2);
   });
+
+  // ---------------------------------------------------------------------------
+  // Route-count guard (quarantine)
+  // ---------------------------------------------------------------------------
+
+  it("marks a commodity with exactly 1 route as quarantined", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1: single route → quarantined. Commodity 2: two routes → healthy.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1
+          ? [route(101, 1, 500)]
+          : [route(201, 2, 300), route(202, 2, 200)]
+      )
+    );
+
+    const groups = await getTopRoutes();
+    const g1 = groups.find((g) => g.id_commodity === 1)!;
+    expect(g1.quarantined).toBe(true);
+  });
+
+  it("marks a commodity with 2 or more routes as not quarantined", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1: two routes → healthy. Commodity 2: single route → quarantined.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1
+          ? [route(101, 1, 500), route(102, 1, 300)]
+          : [route(201, 2, 200)]
+      )
+    );
+
+    const groups = await getTopRoutes();
+    const g1 = groups.find((g) => g.id_commodity === 1)!;
+    expect(g1.quarantined).toBe(false);
+  });
+
+  it("quarantined group sorts below all non-quarantined groups even when its profit is highest", async () => {
+    // Three commodities: commodity 1 has a single route with the highest profit
+    // of all (9999) but must still land after both healthy groups.
+    const prices = [
+      priceRec(1, "Osoian Hides", 100, 0),
+      priceRec(1, "Osoian Hides", 0, 500),
+      priceRec(2, "Agricium", 100, 0),
+      priceRec(2, "Agricium", 0, 400),
+      priceRec(3, "Laranite", 100, 0),
+      priceRec(3, "Laranite", 0, 300),
+    ];
+    mockGetPrices.mockResolvedValue(prices);
+    mockGetRoutes.mockImplementation((id: number) => {
+      if (id === 1) return Promise.resolve([route(101, 1, 9999)]);
+      if (id === 2) return Promise.resolve([route(201, 2, 500), route(202, 2, 400)]);
+      return Promise.resolve([route(301, 3, 300), route(302, 3, 200), route(303, 3, 100)]);
+    });
+
+    const groups = await getTopRoutes();
+    const quarantinedIdx = groups.findIndex((g) => g.id_commodity === 1);
+    const healthy2Idx = groups.findIndex((g) => g.id_commodity === 2);
+    const healthy3Idx = groups.findIndex((g) => g.id_commodity === 3);
+
+    expect(groups[quarantinedIdx].quarantined).toBe(true);
+    expect(quarantinedIdx).toBeGreaterThan(healthy2Idx);
+    expect(quarantinedIdx).toBeGreaterThan(healthy3Idx);
+  });
+
+  it("sorts non-quarantined groups by best-route profit descending within their partition", async () => {
+    // Commodity 3 has a single route (→ quarantined). Commodities 1 and 2 are
+    // healthy; commodity 1's best profit (700) exceeds commodity 2's (400).
+    const prices = [
+      priceRec(1, "Agricium", 100, 0),
+      priceRec(1, "Agricium", 0, 400),
+      priceRec(2, "Laranite", 100, 0),
+      priceRec(2, "Laranite", 0, 300),
+      priceRec(3, "Gold", 100, 0),
+      priceRec(3, "Gold", 0, 200),
+    ];
+    mockGetPrices.mockResolvedValue(prices);
+    mockGetRoutes.mockImplementation((id: number) => {
+      if (id === 1) return Promise.resolve([route(101, 1, 700), route(102, 1, 600)]);
+      if (id === 2) return Promise.resolve([route(201, 2, 400), route(202, 2, 300)]);
+      return Promise.resolve([route(301, 3, 900)]);
+    });
+
+    const groups = await getTopRoutes();
+    const healthy = groups.filter((g) => !g.quarantined);
+    expect(healthy[0].id_commodity).toBe(1);
+    expect(healthy[1].id_commodity).toBe(2);
+  });
 });

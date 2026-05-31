@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-30 — route-count guard + debug verify-button session. Integration-era queue closed (CI, verify-button, guard all shipped). Route-count guard pending live verification of the Osoian Hides case before entry moves to Completed.
+2026-05-31 — doc pass. Route-count guard shipped (threshold <=1, quarantine-and-label), pending live Osoian Hides verification. Outlier guard v2 (SCU / origin-count) logged as the real follow-up in TODO.md Major. Integration-era queue closed (CI, verify-button, guard all shipped). 1 code verification pending.
 
 ## Current state
 
@@ -14,7 +14,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - v0.1 planner RETIRED: planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts removed. Verification entry remains in VERIFICATIONS.md as historical record.
 - Investigation spike DELETED: getCommodityRoutes spike code and /api/routes-spike removed.
 - GitHub Actions CI LIVE: .github/workflows/ci.yml — lint + typecheck + test on every PR into main and on push. PR-into-main flow now in effect; CI green/red on the PR is the merge signal.
-- Route-count guard SHIPPED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. PENDING live verification that Osoian Hides is correctly isolated on the deploy (see VERIFICATIONS.md Pending).
+- Route-count guard SHIPPED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. PENDING live verification that Osoian Hides is correctly isolated on the deploy (see VERIFICATIONS.md Pending). Outlier guard v2 (SCU / origin-count signals) logged as the real follow-up — see TODO.md Major.
 - Debug verify-button SHIPPED (ungated raw UEX passthrough): `app/api/verify/route.ts` (GET endpoint) + `app/DebugRoutes.tsx` (per-card `{ } raw` toggle client island). Marked TEMPORARY DEBUG SURFACE — strip or gate before public launch / monetization unpause.
 
 ## The pivot (why, and what it means)
@@ -54,6 +54,7 @@ Integration-era queue closed (CI ✓, verify-button ✓, guard ✓). Immediate:
 1. Live-verify route-count guard on deploy — confirm Osoian Hides is quarantined with the 'single route — unverified' label and healthy board order is unchanged. Move VERIFICATIONS.md Pending entry to Completed once confirmed.
 
 Next backlog in priority order (see TODO.md Major):
+- Outlier guard v2 — design session for SCU / origin-count trust signals (route-count is a weak proxy; see TODO.md Major for full rationale). Schedule after live Osoian verification passes.
 - Travel time wiring — prerequisite for profit-per-hour ranking (distance field already available from commodities_routes).
 - Profit-per-hour ranking (strongly user-validated; depends on travel-time constants).
 - Profit per SCU display (data already available from commodities_routes; repeatedly requested).
