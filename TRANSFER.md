@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — doc pass. Both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; download added this session. Standing convention recorded in CLAUDE.md: future debug data-pull surfaces ship with both affordances from the start. Copy buttons on both debug panels and the { } prices debug surface shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, the two buttons including download); route-count guard verified 2026-05-30 via raw-data audit (now in VERIFICATIONS.md Completed); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Pending Code Verifications: 0. 2 calibration runs remain parked (open when travel-time wiring merges).
+2026-05-31 — travel-time wiring shipped: lib/travelTime.ts (point estimate + flat-band range per route), display-only, four calibration constants + ESTIMATE_BAND_PCT seeded, no new UEX calls, calibration now open (see VERIFICATIONS.md). Doc pass: both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; standing convention recorded in CLAUDE.md; route-count guard verified 2026-05-30 via raw-data audit (now in VERIFICATIONS.md Completed); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Pending Code Verifications: 0. 1 calibration run OPEN (travel-time constants), 1 still parked (per-ship QT).
 
 ## Current state
 
@@ -14,7 +14,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - v0.1 planner RETIRED: planRoutes, Route interface, lib/routePlanner.ts, lib/routePlanner.test.ts removed. Verification entry remains in VERIFICATIONS.md as historical record.
 - Investigation spike DELETED: getCommodityRoutes spike code and /api/routes-spike removed.
 - GitHub Actions CI LIVE: .github/workflows/ci.yml — lint + typecheck + test on every PR into main and on push. PR-into-main flow now in effect; CI green/red on the PR is the merge signal.
-- Route-count guard SHIPPED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. PENDING live verification that Osoian Hides is correctly isolated on the deploy (see VERIFICATIONS.md Pending). Outlier guard v2 (SCU / origin-count signals) logged as the real follow-up — see TODO.md Major.
+- Route-count guard SHIPPED + VERIFIED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. Verified 2026-05-30 via raw-data audit (Osoian Hides correctly isolated; see VERIFICATIONS.md Completed). Outlier guard v2 (SCU / origin-count signals) logged as the real follow-up — see TODO.md Major.
 - Debug verify-button SHIPPED (ungated raw UEX passthrough): `app/api/verify/route.ts` (GET endpoint) + `app/DebugRoutes.tsx` (per-card `{ } raw` toggle client island) + copy-to-clipboard button on the route panel. Marked TEMPORARY DEBUG SURFACE.
 - Debug prices button SHIPPED: `app/api/verify-prices/route.ts` (GET endpoint, returns raw commodities_prices_all array) + `app/DebugPrices.tsx` (`{ } prices` toggle, rendered below the subhead on the home page). Marked TEMPORARY DEBUG SURFACE. Strip-before-public trigger now covers all three surfaces: /api/verify (raw routes), /api/verify-prices (raw prices feed), and both debug buttons including copy — before public launch / monetization unpause.
 
@@ -47,7 +47,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-0 code verifications pending. 2 calibration runs parked (open when travel-time wiring merges). Atlasium verification closed 2026-05-30 (see VERIFICATIONS.md).
+0 code verifications pending; 1 calibration run now OPEN (travel-time constants), 1 still parked (per-ship QT).
 
 ## Next likely step
 
