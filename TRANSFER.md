@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — doc pass. Copy button + prices debug button shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, DebugRoutes/DebugPrices including copy). Route-count guard still pending mechanical verification — verify against whatever commodity next trips the badge, not Osoian specifically (market churn moves the shortlist). Outlier guard v2 (SCU-based) remains the real follow-up: live E'tam data (44 routes across 3 origins, profit driven by scu_origin 67 vs 22 vs 7) confirms route count is a weak proxy and SCU is the right signal. 1 code verification pending.
+2026-05-31 — doc pass. Copy buttons on both debug panels and the { } prices debug surface shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, the two buttons); route-count guard still pending mechanical verification (any badged commodity, not Osoian specifically); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Remaining Pending verification count: 1 (the guard).
 
 ## Current state
 

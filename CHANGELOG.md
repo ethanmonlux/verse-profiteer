@@ -10,8 +10,8 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 - Server-side UEX proxy: `lib/uex.ts` data-access module (the single place that calls UEX) and `app/api/commodities/route.ts` GET handler returning the `commodities_prices_all` data array. Token and base URL read from env (server-side only); 5-minute fetch cache; env-presence and response-shape guards. Verified against live UEX (2,581 records, spot-check matched site).
 - GitHub Actions CI (lint + typecheck + test) running on pull requests into main and on push. Adopted a PR-into-main step; CI status on the PR gates merges by convention (no enforced branch protection).
 - Route-count guard: commodities with a single profitable route (per the full UEX response) are quarantined below all corroborated commodities and labelled 'single route — unverified', rather than ranking on an uncorroborated profit figure. Threshold starts at <=1 route.
-- Added a copy-to-clipboard button to the debug route panel (DebugRoutes).
-- Added a temporary ungated '{ } prices' debug button + /api/verify-prices endpoint exposing the raw commodities_prices_all feed (the bulk call the shortlist is built from), for auditing candidate selection against source.
+- Added copy-to-clipboard buttons to both debug panels (DebugRoutes per-card '{ } raw', and DebugPrices '{ } prices').
+- Added a temporary ungated '{ } prices' debug button + /api/verify-prices endpoint exposing the raw commodities_prices_all feed (the cheap bulk call the shortlist is built from), for auditing candidate selection against source.
 
 ### Changed
 
