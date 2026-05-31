@@ -7,6 +7,18 @@ export default function DebugPrices() {
   const [data, setData] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    if (data === null) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setError("Copy failed");
+    }
+  }
 
   async function handleClick() {
     const nextOpen = !open;
@@ -37,9 +49,14 @@ export default function DebugPrices() {
           {loading && <p className="text-xs text-text-muted">Loading…</p>}
           {error && <p className="text-xs text-text-muted">{error}</p>}
           {!loading && !error && data !== null && (
-            <pre className="text-xs text-text-muted overflow-auto max-h-80 mt-2">
-              {JSON.stringify(data, null, 2)}
-            </pre>
+            <>
+              <button onClick={handleCopy} className="text-xs text-text-muted mt-2">
+                {copied ? "copied" : "copy"}
+              </button>
+              <pre className="text-xs text-text-muted overflow-auto max-h-80 mt-2">
+                {JSON.stringify(data, null, 2)}
+              </pre>
+            </>
           )}
         </div>
       )}
