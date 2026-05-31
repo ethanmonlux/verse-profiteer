@@ -1,5 +1,6 @@
 import { getTopRoutes } from "@/lib/routes";
 import DebugRoutes from "@/app/DebugRoutes";
+import DebugPrices from "@/app/DebugPrices";
 
 function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
   const diffSec = Math.floor(Date.now() / 1000) - unixSeconds;
@@ -22,6 +23,7 @@ export default async function Home() {
       <p className="text-sm text-text-muted mb-6">
         Top cargo trades · best routes per commodity
       </p>
+      <DebugPrices />
 
       {groups.length === 0 ? (
         <p className="text-center text-text-muted">No routes available.</p>

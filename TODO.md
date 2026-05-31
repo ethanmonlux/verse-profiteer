@@ -40,7 +40,7 @@ New items in priority order. Completed items move to the bottom, organized by or
 - Surface richer per-record fields the feed already returns but the proxy passes through untyped: status_buy / status_sell, SCU inventory, system split (Stanton/Pyro), quality/CS. Route planner will decide which feed ranking.
 - Route-count guard threshold — currently <=1; evaluate loosening to <=2 against live UEX route counts if thin-but-real commodities are observed ranking as healthy.
 - Shortlist over-fetch tuning — getTopRoutes fetches top 20 candidates but displays top 10; the gap is intentional buffer to absorb guard-rejected commodities (e.g. Osoian Hides) without starving the visible board. Once the route-count guard proves the bad set is small/stable, revisit tightening 20 toward ~15. Gated on guard landing.
-- Debug verify endpoint + verify-button — a tappable way to fetch raw UEX commodities_routes for a commodity and compare against the board, removing the manual UEX-website verification step. Gating approach (dev-only vs env-gated) to be decided in its design-spec.
+- Strip or gate the debug verify surface — before public launch / monetization unpause (whichever comes first), strip or gate all three debug surfaces: /api/verify (raw routes), /api/verify-prices (raw prices feed), and the DebugRoutes / DebugPrices buttons (including copy).
 - Enforced branch protection (require green CI to merge) — optional hardening if the project grows past solo.
 
 ## Chore
