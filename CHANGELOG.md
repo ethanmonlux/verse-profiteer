@@ -12,6 +12,7 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 - Route-count guard: commodities with a single profitable route (per the full UEX response) are quarantined below all corroborated commodities and labelled 'single route — unverified', rather than ranking on an uncorroborated profit figure. Threshold starts at <=1 route.
 - Added copy-to-clipboard buttons to both debug panels (DebugRoutes per-card '{ } raw', and DebugPrices '{ } prices').
 - Added a temporary ungated '{ } prices' debug button + /api/verify-prices endpoint exposing the raw commodities_prices_all feed (the cheap bulk call the shortlist is built from), for auditing candidate selection against source.
+- Added download-as-JSON to both debug panels (DebugRoutes, DebugPrices) alongside copy.
 
 ### Changed
 

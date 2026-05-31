@@ -21,3 +21,7 @@ All UEX data access goes through a single module (`lib/uex.ts`) so the caching/f
 ## Branch Model
 
 Solo workflow: CC writes to a session branch; operator opens a PR into `main`; CI (lint + typecheck + test) runs on the PR; operator merges when CI is green. `main` = production, auto-deploys on Vercel on push. No branch protection — the green/red CI status on the PR is the signal; operator enforces it by not merging red. No `develop` layer at this time.
+
+## Debug Surfaces
+
+Any debug surface exposing a raw data pull ships with both copy-to-clipboard and download-as-JSON from the start (copy for small pulls, download for large). Not added later.

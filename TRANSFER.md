@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — doc pass. Copy buttons on both debug panels and the { } prices debug surface shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, the two buttons); route-count guard still pending mechanical verification (any badged commodity, not Osoian specifically); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Remaining Pending verification count: 1 (the guard).
+2026-05-31 — doc pass. Both debug panels (DebugRoutes, DebugPrices) now have copy-to-clipboard AND download-as-JSON; download added this session. Standing convention recorded in CLAUDE.md: future debug data-pull surfaces ship with both affordances from the start. Copy buttons on both debug panels and the { } prices debug surface shipped; strip-before-public trigger now covers three debug surfaces (/api/verify, /api/verify-prices, the two buttons including download); route-count guard still pending mechanical verification (any badged commodity, not Osoian specifically); outlier guard v2 (SCU + origin-count) is the real follow-up with live E'tam evidence logged; haulerapp.space logged as prior art for any future contract/loop routing. Remaining Pending verification count: 1 (the guard).
 
 ## Current state
 
