@@ -30,6 +30,8 @@ export interface CommodityRoute {
   id_terminal_origin: number;
   id_terminal_destination: number;
   price_margin: number;
+  price_origin: number;
+  price_destination: number;
   price_roi: number;
   profit: number;
   investment: number;

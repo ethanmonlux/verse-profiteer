@@ -13,6 +13,8 @@ function makeRoute(
     id_terminal_origin: 0,
     id_terminal_destination: 0,
     price_margin: 0,
+    price_origin: 0,
+    price_destination: 0,
     price_roi: 0,
     profit: overrides.profit ?? 0,
     investment: 0,
