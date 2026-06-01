@@ -190,6 +190,8 @@ function route(id: number, id_commodity: number, profit: number): CommodityRoute
     id_terminal_origin: 0,
     id_terminal_destination: 0,
     price_margin: 0,
+    price_origin: 0,
+    price_destination: 0,
     price_roi: 0,
     profit,
     investment: 0,

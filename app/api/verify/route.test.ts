@@ -19,6 +19,8 @@ const fixtureRoutes: CommodityRoute[] = [
     id_terminal_origin: 10,
     id_terminal_destination: 20,
     price_margin: 100,
+    price_origin: 0,
+    price_destination: 0,
     price_roi: 0.1,
     profit: 500,
     investment: 5000,

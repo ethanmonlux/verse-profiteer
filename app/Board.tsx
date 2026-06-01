@@ -96,6 +96,9 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                         <div className="text-xs text-text-muted tabular-nums">
                           {pps.toLocaleString()}/SCU
                         </div>
+                        <div className="text-xs text-text-muted tabular-nums">
+                          buy {route.price_origin.toLocaleString()}/SCU · sell {route.price_destination.toLocaleString()}/SCU
+                        </div>
                         {isExpanded && (
                           <div className="text-xs text-text-muted tabular-nums">
                             {min}–{max} min
