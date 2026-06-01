@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — shipped + tested profit-per-hour; shipped card collapse + /api/verify-qt debug surface; verified ship-capacity scaling (moved to Completed); pulled QT speed from UEX (category 22, "Maximum Speed" km/s, ≈18.18 Gm/min — seed not yet updated from 20; no spool attribute); card now shows too many numbers → UI redesign (#4) is next.
+2026-05-31 — shipped card information-hierarchy redesign (realizable is the single headline; capacity qualifier 'pick up N · M available'; green realizable expanded-only, killing the duplicate-number confusion; total removed from card; profit-per-hour REMOVED from card — belongs in multi-leg loop). Dropped calibration as a blocker on per-hour/ranking (no users yet; constants stay seeds, note retained). Operator surfaced the next big design: capacity-aware ranking AND candidate selection — the top-20 shortlist is capacity-blind, so 'best routes for your ship' is structurally wrong for small ships until the shortlist itself is capacity-aware. Captured guided-planner north star, trade-log (first persistent state), risk/contested-route surface, and the product thesis.
 
 ## Current state
 
@@ -39,6 +39,9 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - No official RSI commodity-market API exists or is planned (confirmed 2026-05). UEX is the best upstream source; player price overrides are the single genuine data-quality edge.
 - Supply/demand is player-influenced + tick-refreshed (5-15 min); feed quantities are fuzzy snapshots. Load/unload is a real per-SCU time cost (~6-8 min for 696 SCU), belongs with travel-time constants.
 - STALENESS: commodities_prices_all has date_modified but NO game_version. Patch boundaries are mass-staleness events, distinct from per-cell aging.
+- Calibration de-gated (2026-05-31): travel-time calibration no longer blocks per-hour display or ranking work. Constants remain uncalibrated seeds; VERIFICATIONS calibration run stays open as standing tuning, not a release gate.
+- Profit-per-hour removed from the single-route card (2026-05-31): single-run extrapolation overstates sustained earnings (ignores supply refill, empty return leg, per-shard depletion). Reinstated only inside the multi-leg loop planner. lib/profitPerHour.ts retained.
+- Board still ranks by total profit. Capacity-aware ranking (re-sort by realizable-given-capacity) is the next design-spec and is escalation-gated; it additionally requires making the shortlist+fetch capacity-aware (touches UEX request fan-out), because the candidate set — not just the sort — is currently capacity-blind.
 
 ## Open operator decisions
 
@@ -54,7 +57,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Next likely step
 
-Next session = UI redesign (DESIGN-SPEC) — card now shows four profit numbers per row with no hierarchy; decide the ONE headline number and ranking basis (see TODO.md Major). After that, in priority order: outlier guard v2, profit-per-hour ranking (gated on calibration), multi-leg loop.
+Capacity-aware ranking & candidate selection (DESIGN-SPEC, escalation-gated, REVIEW + VERIFY) — see TODO Major. Two layers: client-side re-sort of the displayed set by realizable-given-capacity (server/client ranking-boundary decision), and a capacity-aware shortlist+fetch so the right routes are fetched for the chosen ship (the top-20-isn't-stable finding; touches request fan-out). Merges the former outlier-guard-v2 shortlist-input bug. After that, in rough priority: guided-planner north star, trade-log (forces the Railway+DB storage decision), user price overrides, multi-leg loop (where per-hour returns), realizable-profit floor.
 
 ## Merge state
 
@@ -64,3 +67,6 @@ Next session = UI redesign (DESIGN-SPEC) — card now shows four profit numbers 
 - Spike endpoints (/api/routes-spike, getCommodityRoutes) deleted.
 - GitHub Actions CI live (2026-05-30). PR-into-main flow in effect.
 - Branch model: operator opens PR from CC session branch into main; CI runs; merge when green. No develop layer while solo. No enforced branch protection.
+
+## Product thesis (framing for future sessions)
+No official RSI market API exists or can realistically exist (per-shard server-meshed economy; trade friction is the gameplay loop CIG wants to keep). The gap is structural and permanent. The tool is not a worse API — it is valuable precisely because no API can exist. Every hard problem (staleness, contention, freshness, overrides) shares one root: no ground truth. That root is the moat. North star: the freshest, most honest read on an economy nobody can see directly. The guided planner, trade log, contention-awareness, and price overrides all ladder up to this.
