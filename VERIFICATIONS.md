@@ -30,7 +30,7 @@ These exist for the life of the tool — they don’t “complete” once and di
 
 ## Completed — Calibration Runs
 
-(none)
+- Sell-side auto-load fee — 2026-06-01. Scrap sell at New Babbage TDD, 8 SCU @ 3,555.86/unit = 28,446 gross goods value; with auto-load fee toggled on, net proceeds = 27,958 (fee 488 deducted on the unload/sell side, same magnitude as the 488 load fee paid at purchase). Confirms: auto-load fee is charged per event on BOTH load (buy) AND unload (sell). Balance reconciliation: 779,074 + 27,958 = 807,032, matched in-game (~807,xxx). Fee model (~190 fixed + ~62/SCU per event, round-trip ~2×) considered measured/closed. Still uncaptured: clean QT wall-clock for a single leg — travel-time constants remain flagged unverified.
 
 ## Archive
 

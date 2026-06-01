@@ -15,6 +15,11 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - Sale proceeds reconciled: 8 SCU Scrap @ 3,555.86 − 488 fee = 27,958; balance 779,074 → 807,032 confirmed to the credit.
 - Structural findings: buy-side availability routinely collapses to 0 at city TDDs (confirmed: NB TDD ~80 commodities OUT OF STOCK); city TDDs = sell termini, not buy origins; price flat vs quantity + varies by terminal confirmed (Scrap 2,600–4,500 spread, ~73%); terminal-location friction (internal transit to TDD is additive on unload leg).
 - Rental-ROI sourcing: use UEX vehicles_rentals_prices feed (has game_version for staleness gating), NOT marketplace player-listings. In-game rental is per-real-time-day with multi-day discounts and full insurance included.
+- Sell-side fee confirmed: auto-load fee charged on both load AND unload (~190 fixed + ~62/SCU per event, round-trip ~2×; optional via hand-load). Sale proceeds reconciled to balance (8 SCU Scrap @ 3,555.86 − 488 fee = 27,958; 779,074 → 807,032 confirmed to the credit). Fee model measured/closed; moved to Completed in VERIFICATIONS.md.
+- Capacity-aware ranking UNBLOCKED: usable capacity is modelable via vehicle∩commodity container_sizes intersection — UEX exposes container_sizes on both /vehicles and per-terminal commodity data, plus game_version on /vehicles. Physical grid-cell geometry is NOT in UEX (no slot footprints), so true bin-packing stays out of scope. Pack-full-vs-pack-fast is a real surfaced tradeoff.
+- Crash = total uninsured cargo loss (RSI Knowledge Base confirmed): hull insurance covers the ship via claim, not cargo; Support will not reimburse. New Minor: user risk-tolerance slider for risk-adjusted profit; also diversifies routing (risk-averse players steered to lower-value cargo, softening top-route depletion).
+- Rentals game_version precision: game_version is on the DETAILED endpoint (vehicles_rentals_prices?id_vehicle=…) only — the bulk _all is date_modified-only. Exception to the default-to-bulk rule for this specific staleness-gating use case.
+- Source landscape: UEX game_versions endpoint = canonical patch resolver for staleness gating. sc-trade.tools = UEX's named partner, natural second-source cross-check (public-API status unconfirmed). starcitizen.tools / RSI Cargo Grid Reference sheets = human-reference only (curated images/specs, not live feeds; usable only as a one-time hand-seed for per-ship grid geometry).
 
 ## Open measurement questions
 
@@ -76,7 +81,7 @@ North star: the freshest, most honest read on an economy nobody can see directly
 
 ## Pending verification count
 
-0 code verifications pending; 1 calibration run OPEN / STANDING (travel-time constants — partial observables captured 2026-06-01: auto-load fee model, ~72s fixed load/unload overhead, sale proceeds reconciled to the credit; QT wall-clock leg still outstanding); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships).
+0 code verifications pending; 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). New this session: 1 calibration run completed (sell-side auto-load fee, see VERIFICATIONS.md Completed — Calibration Runs).
 
 ## Next likely step
 
