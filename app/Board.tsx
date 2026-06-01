@@ -6,7 +6,6 @@ import DebugRoutes from "@/app/DebugRoutes";
 import { estimateTravelRange } from "@/lib/travelTime";
 import { profitPerScu } from "@/lib/profitPerScu";
 import { realizableProfit, routeBottleneck } from "@/lib/realizableProfit";
-import { profitPerHour } from "@/lib/profitPerHour";
 
 function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
   const diffSec = Math.floor(Date.now() / 1000) - unixSeconds;
@@ -77,24 +76,25 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                     const { min, max } = estimateTravelRange(route);
                     const pps = profitPerScu(route);
                     const realizable = realizableProfit(route, capacity);
-                    const pph = profitPerHour(route, capacity);
                     const bottleneck = routeBottleneck(route);
                     const hasCapacity = Number.isFinite(capacity) && capacity > 0;
                     const haulable = hasCapacity
                       ? Math.min(capacity, route.scu_origin, route.scu_destination)
                       : null;
-                    const pct = haulable !== null ? Math.round((haulable / capacity) * 100) : null;
+                    const supply = routeBottleneck(route);
                     return (
                       <div key={route.id} className="flex flex-col gap-0.5">
                         <div className="flex justify-between items-center gap-2">
                           <span className="text-sm text-text-muted">{routeLabel}</span>
-                          <span className="text-profit font-semibold tabular-nums">+{realizable.toLocaleString()} realizable</span>
+                          {isExpanded && (
+                            <span className="text-profit font-semibold tabular-nums">+{realizable.toLocaleString()} realizable</span>
+                          )}
                         </div>
                         <div className="text-xs text-text-muted tabular-nums">
-                          {pct !== null ? `fills ${pct}% of hold` : `at ${bottleneck} SCU max supply`}
+                          {haulable !== null ? `pick up ${haulable.toLocaleString()} SCU · ${supply.toLocaleString()} available` : `at ${bottleneck} SCU max supply`}
                         </div>
                         <div className="text-xs text-text-muted tabular-nums">
-                          {pps.toLocaleString()}/SCU · +{pph.toLocaleString()}/hr est
+                          {pps.toLocaleString()}/SCU
                         </div>
                         {isExpanded && (
                           <div className="text-xs text-text-muted tabular-nums">
