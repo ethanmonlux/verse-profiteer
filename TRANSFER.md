@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — shipped ship-capacity scaling (display-only realizable profit, three-way min, verification PENDING); found a shortlist available-SCU bug (folded into outlier guard v2); logged competitor anti-pattern + realizable-profit floor + ship-picker/flip-money backlog.
+2026-05-31 — shipped profit-per-hour (display-only, untested — test pending) + card collapse + /api/verify-qt debug surface; verified ship-capacity scaling (moved to Completed); found the card now shows too many numbers → UI redesign (#4) is now due; QT category id = 22 but attribute pull came back empty (retry needed).
 
 ## Current state
 
@@ -19,7 +19,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - Route-count guard SHIPPED + VERIFIED (threshold <=1, quarantine-and-label): `lib/routes.ts` + `app/page.tsx`. Commodities with a single profitable route are quarantined below all corroborated commodities and labelled 'single route — unverified'. Verified 2026-05-30 via raw-data audit (Osoian Hides correctly isolated; see VERIFICATIONS.md Completed). Outlier guard v2 (SCU / origin-count signals) logged as the real follow-up — see TODO.md Major.
 - Debug verify-button SHIPPED (ungated raw UEX passthrough): `app/api/verify/route.ts` (GET endpoint) + `app/DebugRoutes.tsx` (per-card `{ } raw` toggle client island) + copy-to-clipboard button on the route panel. Marked TEMPORARY DEBUG SURFACE.
 - Debug prices button SHIPPED: `app/api/verify-prices/route.ts` (GET endpoint, returns raw commodities_prices_all array) + `app/DebugPrices.tsx` (`{ } prices` toggle, rendered below the subhead on the home page). Marked TEMPORARY DEBUG SURFACE. Strip-before-public trigger now covers all three surfaces: /api/verify (raw routes), /api/verify-prices (raw prices feed), and both debug buttons including copy — before public launch / monetization unpause.
-- Ship-capacity scaling SHIPPED (lib/realizableProfit.ts realizableProfit + routeBottleneck; board split into server + app/Board.tsx client with in-memory capacity input; per-row realizable + cap indicator; ≤-total-profit invariant tested). Display-only, ranking unchanged. Verification PENDING (state-sensitive) — see VERIFICATIONS.md.
+- Ship-capacity scaling SHIPPED + VERIFIED (lib/realizableProfit.ts realizableProfit + routeBottleneck; board split into server + app/Board.tsx client with in-memory capacity input; per-row realizable + cap indicator; ≤-total-profit invariant tested). Display-only, ranking unchanged. Verified 2026-05-31 (VERIFICATIONS Completed).
 
 ## The pivot (why, and what it means)
 
@@ -50,15 +50,11 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Pending verification count
 
-1 code verification PENDING (ship-capacity scaling); 1 calibration run OPEN but deferred (travel-time); 1 parked (per-ship QT).
+0 code verifications pending; 1 calibration run OPEN but deferred (travel-time, 4 constants); 1 parked (per-ship QT).
 
 ## Next likely step
 
-Travel-time and profit-per-SCU shipped this session. Next backlog in priority order (see TODO.md Major):
-- Ship-capacity scaling (DESIGN-SPEC, state-sensitive) — add ship-capacity input, show realizable profit = profitPerScu × min(capacity, scu_origin, scu_destination), cap indicator when bottleneck is below capacity. Resolves the per-SCU vs total-profit contradiction visible in the live board.
-- Outlier guard v2 — design session for SCU / origin-count trust signals (route-count is a weak proxy; live E'tam data confirms it: 44 routes across 3 origins, profit driven by scu_origin 67 vs 22 vs 7 — SCU is the right signal).
-- Profit-per-hour ranking (strongly user-validated; depends on travel-time constants being calibrated).
-- Multi-leg loop / chain routing (graph/pathfinding feature; needs own design-session; crowding caveat noted).
+Next session = UI redesign (DESIGN-SPEC) — card now shows four profit numbers per row with no hierarchy; decide the ONE headline number and ranking basis (see TODO.md Major). After that, in priority order: outlier guard v2, profit-per-hour ranking (gated on calibration), multi-leg loop.
 
 ## Merge state
 
