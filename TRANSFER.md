@@ -25,17 +25,18 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## v1 Scope — Locked 2026-06-01
 
-**v1 = items 1–5.** Goal: enable a newer player to pick and run a route end-to-end without getting lost or stuck.
+**v1 boundary (corrected against raw commodities_routes dump):** v1 = items 1–5. Goal: enable a newer player to pick a route and execute it end-to-end without getting lost or running an un-runnable route.
 
-1. **Capacity-aware ranking & candidate selection** — escalation-gated, design-spec, REVIEW+VERIFY.
-2. **container_sizes box-capability** (intersection model) — built together with item 1.
-3. **System filter** [Stanton-default toggle] — NOT escalation-gated, display-layer candidate quick-win. Per-system toggle (Stanton / Pyro / Nyx), Stanton-only by default.
-4. **Terminal-location guide** — Tier 1 UEX auto-surface (system → planet → city/station → terminal; feasibility check needed) + Tier 2 hand-authored interior-wayfinding notes (static file in repo, operator-edited); Tier 3 turn-by-turn navigation explicitly OUT.
-5. **Buy/sell prices on the card** — open question: does commodities_routes return price_buy/price_sell? Check the on-card "{ } raw" debug button against a live route object BEFORE writing any code prompt. Trivial if fields exist untyped; data-join work if absent.
+**KEY FINDING:** CommodityRoute interface is an incomplete subset of the real response (see routes-29 dump) — type missing fields from raw, don't trust the interface as complete.
 
-**Post-v1 — explicitly deferred, do NOT fold in:** ship-info surface (rental/buy prices + locations + SCU/box + QT per ship); crash/cargo-loss risk slider; multi-leg loop planner; user price overrides; UI visual-identity pass.
+1+2. **Capacity-aware ranking + container_sizes** — data already on route response (container_sizes_origin/destination); ranking math + capacity-aware fan-out is the real work; escalation-gated, REVIEW+VERIFY.
+3. **System filter** [Stanton-default toggle] — CORRECTION: must be SERVER-SIDE in getTopRoutes BEFORE headline-selection/sort/slice, NOT a display filter; escalation-gated, REVIEW+VERIFY; entangled with 1/2. URGENT: current #1 board route (E'tam +609k) originates in Pyro (Ashland) — un-runnable for Stanton-only and unflagged.
+4. **Terminal-location guide** — Tier 1 auto incl. terminal capability flags (all already on route response, no extra fetch), Tier 2 hand-authored interior notes (operator-maintained static file), Tier 3 out.
+5. **Buy/sell prices** — TRIVIAL display fix: price_origin/price_destination already returned in raw response, just untyped/unrendered. The one safe quick win — not escalation-gated, REVIEW only.
 
-**Sequencing:** items 3 and 5 are display-layer candidate quick-wins (item 5 gated on its open question); items 1+2 are the escalation-gated meaty design-spec; item 4 needs the Tier-1 feasibility check first. Operator absence ahead — scope locked for resumption. Recommend shipping nothing escalation-gated until operator is present to catch bugs.
+**Sequencing:** only #5 is safe to ship unattended; #1/2/3 are escalation-gated REVIEW+VERIFY, build when present; #4 Tier 1 is also straightforward once present.
+
+**Post-v1 — explicitly deferred, do NOT fold in:** ship-info surface; crash/cargo-loss risk slider; multi-leg loop planner; user price overrides; UI visual-identity pass.
 
 ## Open measurement questions
 
@@ -97,7 +98,7 @@ North star: the freshest, most honest read on an economy nobody can see directly
 
 ## Pending verification count
 
-0 code verifications pending; 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships); 1 investigation required before building v1 item 5 (buy/sell prices on the card) — inspect a raw route object via the on-card "{ } raw" debug button to confirm whether commodities_routes returns price_buy/price_sell fields.
+0 code verifications pending; 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). v1 item 5 investigation CLOSED: commodities_routes confirmed to return price_origin/price_destination (from routes-29 dump) — no open questions before implementation.
 
 ## Next likely step
 
