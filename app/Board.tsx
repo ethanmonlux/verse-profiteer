@@ -50,6 +50,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
             const { label, stale } = relativeAge(group.routes[0].date_added);
             const isExpanded = expandedCards.has(group.id_commodity);
             const routesToShow = isExpanded ? group.routes : [group.routes[0]];
+            const primaryRealizable = realizableProfit(group.routes[0], capacity);
             return (
               <div
                 key={group.id_commodity}
@@ -63,7 +64,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                     )}
                   </div>
                   <span className="text-profit font-bold text-lg tabular-nums">
-                    +{group.routes[0].profit.toLocaleString()}
+                    +{primaryRealizable.toLocaleString()}
                   </span>
                 </div>
 
@@ -78,22 +79,27 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                     const realizable = realizableProfit(route, capacity);
                     const pph = profitPerHour(route, capacity);
                     const bottleneck = routeBottleneck(route);
-                    const showCapIndicator =
-                      Number.isFinite(capacity) && capacity > 0 && capacity > bottleneck;
+                    const hasCapacity = Number.isFinite(capacity) && capacity > 0;
+                    const haulable = hasCapacity
+                      ? Math.min(capacity, route.scu_origin, route.scu_destination)
+                      : null;
+                    const pct = haulable !== null ? Math.round((haulable / capacity) * 100) : null;
                     return (
                       <div key={route.id} className="flex flex-col gap-0.5">
                         <div className="flex justify-between items-center gap-2">
                           <span className="text-sm text-text-muted">{routeLabel}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm text-text-muted tabular-nums">{min}–{max} min</span>
-                            <span className="text-sm text-text-muted tabular-nums">{pps.toLocaleString()}/SCU</span>
-                            <span className="text-sm tabular-nums text-profit">+{realizable.toLocaleString()} realizable</span>
-                            <span className="text-sm text-text-muted tabular-nums">+{pph.toLocaleString()}/hr</span>
-                            <span className="text-xs tabular-nums text-text-muted">of +{route.profit.toLocaleString()} total</span>
-                          </div>
+                          <span className="text-profit font-semibold tabular-nums">+{realizable.toLocaleString()} realizable</span>
                         </div>
-                        {showCapIndicator && (
-                          <span className="text-xs text-warning tabular-nums">⚠ route caps at {bottleneck} SCU — hold not filled</span>
+                        <div className="text-xs text-text-muted tabular-nums">
+                          {pct !== null ? `fills ${pct}% of hold` : `at ${bottleneck} SCU max supply`}
+                        </div>
+                        <div className="text-xs text-text-muted tabular-nums">
+                          {pps.toLocaleString()}/SCU · +{pph.toLocaleString()}/hr est
+                        </div>
+                        {isExpanded && (
+                          <div className="text-xs text-text-muted tabular-nums">
+                            {min}–{max} min
+                          </div>
                         )}
                       </div>
                     );
