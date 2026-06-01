@@ -4,7 +4,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
-2026-05-31 — shipped profit-per-hour (display-only, untested — test pending) + card collapse + /api/verify-qt debug surface; verified ship-capacity scaling (moved to Completed); found the card now shows too many numbers → UI redesign (#4) is now due; QT category id = 22 but attribute pull came back empty (retry needed).
+2026-05-31 — shipped + tested profit-per-hour; shipped card collapse + /api/verify-qt debug surface; verified ship-capacity scaling (moved to Completed); pulled QT speed from UEX (category 22, "Maximum Speed" km/s, ≈18.18 Gm/min — seed not yet updated from 20; no spool attribute); card now shows too many numbers → UI redesign (#4) is next.
 
 ## Current state
 
