@@ -6,6 +6,7 @@ import DebugRoutes from "@/app/DebugRoutes";
 import { estimateTravelRange } from "@/lib/travelTime";
 import { profitPerScu } from "@/lib/profitPerScu";
 import { realizableProfit, routeBottleneck } from "@/lib/realizableProfit";
+import { profitPerHour } from "@/lib/profitPerHour";
 
 function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
   const diffSec = Math.floor(Date.now() / 1000) - unixSeconds;
@@ -22,6 +23,7 @@ function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
 export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
   const [capacityStr, setCapacityStr] = useState("");
   const capacity = parseFloat(capacityStr);
+  const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
 
   return (
     <>
@@ -46,6 +48,8 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
         <div className="flex flex-col gap-3">
           {groups.map((group) => {
             const { label, stale } = relativeAge(group.routes[0].date_added);
+            const isExpanded = expandedCards.has(group.id_commodity);
+            const routesToShow = isExpanded ? group.routes : [group.routes[0]];
             return (
               <div
                 key={group.id_commodity}
@@ -64,7 +68,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                 </div>
 
                 <div className="mt-2 flex flex-col gap-1">
-                  {group.routes.map((route) => {
+                  {routesToShow.map((route) => {
                     const routeLabel =
                       route.origin_terminal_name && route.destination_terminal_name
                         ? `${route.origin_terminal_name} → ${route.destination_terminal_name}`
@@ -72,6 +76,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                     const { min, max } = estimateTravelRange(route);
                     const pps = profitPerScu(route);
                     const realizable = realizableProfit(route, capacity);
+                    const pph = profitPerHour(route, capacity);
                     const bottleneck = routeBottleneck(route);
                     const showCapIndicator =
                       Number.isFinite(capacity) && capacity > 0 && capacity > bottleneck;
@@ -83,6 +88,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                             <span className="text-sm text-text-muted tabular-nums">{min}–{max} min</span>
                             <span className="text-sm text-text-muted tabular-nums">{pps.toLocaleString()}/SCU</span>
                             <span className="text-sm tabular-nums text-profit">+{realizable.toLocaleString()} realizable</span>
+                            <span className="text-sm text-text-muted tabular-nums">+{pph.toLocaleString()}/hr</span>
                             <span className="text-xs tabular-nums text-text-muted">of +{route.profit.toLocaleString()} total</span>
                           </div>
                         </div>
@@ -92,6 +98,21 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                       </div>
                     );
                   })}
+                  {group.routes.length > 1 && (
+                    <button
+                      className="text-xs text-accent text-left"
+                      onClick={() =>
+                        setExpandedCards((prev) => {
+                          const next = new Set(prev);
+                          if (isExpanded) next.delete(group.id_commodity);
+                          else next.add(group.id_commodity);
+                          return next;
+                        })
+                      }
+                    >
+                      {isExpanded ? "show less" : `+${group.routes.length - 1} more routes`}
+                    </button>
+                  )}
                 </div>
                 <p className="mt-1 text-xs text-text-muted">travel time uncalibrated — seed estimate</p>
 
