@@ -73,6 +73,75 @@ export async function getCommodityRoutes(idCommodity: number): Promise<Commodity
   return json.data as CommodityRoute[];
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  [key: string]: unknown;
+}
+
+export interface ItemAttribute {
+  attribute_name: string;
+  value: string | number;
+  unit: string;
+  [key: string]: unknown;
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const base = process.env.UEX_BASE_URL;
+  const token = process.env.UEX_API_TOKEN;
+
+  if (!base || !token) {
+    throw new Error("UEX not configured");
+  }
+
+  const res = await fetch(`${base}/categories`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    next: { revalidate: 86400 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`UEX request failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+
+  if (json.status !== "ok" || !Array.isArray(json.data)) {
+    throw new Error("UEX returned unexpected response");
+  }
+
+  return json.data as Category[];
+}
+
+export async function getItemsAttributes(idCategory: number): Promise<ItemAttribute[]> {
+  const base = process.env.UEX_BASE_URL;
+  const token = process.env.UEX_API_TOKEN;
+
+  if (!base || !token) {
+    throw new Error("UEX not configured");
+  }
+
+  const res = await fetch(`${base}/items_attributes?id_category=${idCategory}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    next: { revalidate: 86400 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`UEX request failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+
+  if (json.status !== "ok" || !Array.isArray(json.data)) {
+    throw new Error("UEX returned unexpected response");
+  }
+
+  return json.data as ItemAttribute[];
+}
+
 export async function getCommodityPricesAll(): Promise<CommodityPriceRecord[]> {
   const base = process.env.UEX_BASE_URL;
   const token = process.env.UEX_API_TOKEN;

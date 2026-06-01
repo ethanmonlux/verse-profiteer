@@ -1,5 +1,6 @@
 import { getTopRoutes } from "@/lib/routes";
 import DebugPrices from "@/app/DebugPrices";
+import DebugQt from "@/app/DebugQt";
 import Board from "@/app/Board";
 
 export default async function Home() {
@@ -12,6 +13,7 @@ export default async function Home() {
         Top cargo trades · best routes per commodity
       </p>
       <DebugPrices />
+      <DebugQt />
       <Board groups={groups} />
     </main>
   );
