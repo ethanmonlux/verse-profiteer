@@ -6,6 +6,7 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 
 ### Added
 
+- Buy & sell prices on each route row. `price_origin` (buy at origin) and `price_destination` (sell at destination) — already returned by `commodities_routes` but previously untyped/unrendered — added to the `CommodityRoute` interface in `lib/uex.ts` and shown per row as "buy {price_origin}/SCU · sell {price_destination}/SCU" (toLocaleString formatting, existing tokens). Display-only; no new fetch, no ranking change. Verified on production: card math reconciles (sell − buy = per-SCU; per-SCU × supply = headline profit; per-SCU × capacity = realizable). Note for future work: the `commodities_routes` response is richer than the `CommodityRoute` interface (see TODO key finding) — type missing fields from the raw response rather than assuming the interface is complete.
 - Profit-per-hour per route. lib/profitPerHour.ts: profitPerHour(route, shipCapacity) = realizableProfit / (estimateTravelMinutes / 60), divide-by-zero guarded, shown as +{value}/hr per row. Derives from travel-time constants so it recomputes on calibration. Display-only; ranking still on total profit. Unit tests in lib/profitPerHour.test.ts.
 - Cards collapsed to one primary route by default, with a "+N more routes" inline toggle (per-card expand state) to reveal the rest. Reduces row density on mobile.
 - Temporary debug surface /api/verify-qt + DebugQt ("{ } qt" button) to inspect UEX categories and items_attributes, with copy + download-JSON. UNGATED — strip/gate before public traffic.
