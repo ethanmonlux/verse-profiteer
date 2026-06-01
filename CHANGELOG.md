@@ -24,10 +24,12 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 
 - Replaced the local route planner with UEX commodities_routes integration. New `lib/routes.ts` (`shortlistCommodities` + `getTopRoutes`) selects top-margin commodity candidates from the cached prices feed, fetches real UEX routes for those candidates, and ranks by realizable profit.
 - Routes board now renders one card per commodity (top 3 routes each, origin → destination + profit), sorted by best-route profit, showing the top 10 commodities.
+- Card information hierarchy redesign (display-only, verified in production). Card headline now shows the primary route's realizable profit (capacity-aware), not total. Per-route green realizable profit shows only when a card is expanded (fixed prior double-count on collapsed cards). Per-row qualifier shows "pick up {haulable} SCU · {supply} available" when capacity is set, "at {bottleneck} SCU max supply" when unset. Total profit demoted behind expand; per-SCU on secondary line.
 
 ### Removed
 
 - Retired `planRoutes`, the `Route` interface, `lib/routePlanner.ts`, `lib/routePlanner.test.ts`, and the `/api/routes-spike` endpoint.
+- Profit-per-hour removed from the card. Rationale: single-run per-hour overstates sustained earnings (ignores supply refill, empty return leg, and per-shard demand depletion). Per-hour belongs in the future multi-leg loop planner. lib/profitPerHour.ts retained on disk, not deleted.
 
 ### Fixed
 
