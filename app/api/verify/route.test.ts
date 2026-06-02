@@ -41,7 +41,6 @@ const fixtureRoutes: CommodityRoute[] = [
     scu_reachable: 0,
     container_sizes_origin: "",
     container_sizes_destination: "",
-    has_freight_elevator_origin: 0,
   },
 ];
 

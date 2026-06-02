@@ -52,7 +52,6 @@ export interface CommodityRoute {
   scu_reachable: number;
   container_sizes_origin: string;
   container_sizes_destination: string;
-  has_freight_elevator_origin: number;
 }
 
 export async function getCommodityRoutes(idCommodity: number): Promise<CommodityRoute[]> {
