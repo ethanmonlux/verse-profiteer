@@ -14,9 +14,9 @@ export default function ShipPicker({
 }) {
   const router = useRouter();
 
-  // SCU floor drops ground vehicles and token-cargo fighters; 40 is provisional — tune as ship roster evolves.
+  // Dedicated cargo ships only; is_ground_vehicle guard excludes any cargo-flagged ground vehicle. Intentionally cuts token-cargo fighters (e.g. 100i) — this is a trading tool.
   const cargoShips = vehicles
-    .filter((v) => v.scu >= 40)
+    .filter((v) => v.is_cargo === 1 && v.is_ground_vehicle === 0)
     .sort((a, b) => b.scu - a.scu || a.name.localeCompare(b.name));
 
   const maxScu = cargoShips[0]?.scu ?? 1;
@@ -46,7 +46,7 @@ export default function ShipPicker({
             >
               <div className="flex justify-between items-baseline gap-1 mb-2">
                 <span
-                  className={`text-sm font-medium leading-tight ${isSelected ? "text-accent" : ""}`}
+                  className={`text-sm font-medium leading-tight ${isSelected ? "text-accent" : "text-text-muted"}`}
                 >
                   {vehicle.name}
                 </span>
