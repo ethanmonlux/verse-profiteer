@@ -4,6 +4,7 @@ import {
   CommodityPriceRecord,
   CommodityRoute,
 } from "@/lib/uex";
+import { realizableProfit } from "@/lib/realizableProfit";
 
 export function shortlistCommodities(records: CommodityPriceRecord[], n: number): number[] {
   const margins = new Map<number, { maxSell: number; minBuy: number }>();
@@ -23,10 +24,12 @@ export function shortlistCommodities(records: CommodityPriceRecord[], n: number)
     .map(({ id }) => id);
 }
 
-// Over-fetch buffer: fetch 20 candidates, show 10. The gap absorbs
-// guard-rejected commodities (e.g. single-route outliers) without
-// starving the visible board. Revisit once the route-count guard lands.
-const SHORTLIST_SIZE = 20;
+// Over-fetch buffer: fetch 35 candidates, show 10. Wider than the original 20
+// because system-filtering thins survivors and the shortlist is system-blind
+// (the prices feed carries no system field). A short board is acceptable and
+// surfaced honestly in the UI; this widens the odds of filling 10 without a
+// /terminals join, which is deferred to v2.
+const SHORTLIST_SIZE = 35;
 const DISPLAY_COUNT = 10;
 
 // Start at 1 (only single-route commodities, e.g. Osoian Hides). Route count is a weak proxy — see Outlier guard v2 in TODO. Do not loosen without that work.
@@ -39,7 +42,10 @@ export interface CommodityRouteGroup {
   quarantined: boolean;
 }
 
-export async function getTopRoutes(): Promise<CommodityRouteGroup[]> {
+export async function getTopRoutes(opts: {
+  allowedSystems: string[];
+  shipCapacity: number;
+}): Promise<CommodityRouteGroup[]> {
   const prices = await getCommodityPricesAll();
   const ids = shortlistCommodities(prices, SHORTLIST_SIZE);
 
@@ -52,24 +58,37 @@ export async function getTopRoutes(): Promise<CommodityRouteGroup[]> {
 
   const routeArrays = await Promise.all(ids.map((id) => getCommodityRoutes(id)));
 
+  const allowedSet = new Set(opts.allowedSystems);
+
   const groups: CommodityRouteGroup[] = [];
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i];
-    const routeCount = routeArrays[i].length;
-    const sorted = routeArrays[i].slice().sort((a, b) => b.profit - a.profit);
+    const runnable = routeArrays[i].filter(
+      (r) =>
+        r.origin_star_system_name !== null &&
+        r.destination_star_system_name !== null &&
+        allowedSet.has(r.origin_star_system_name) &&
+        allowedSet.has(r.destination_star_system_name)
+    );
+    if (runnable.length === 0) continue;
+    const sorted = runnable
+      .slice()
+      .sort((a, b) => realizableProfit(b, opts.shipCapacity) - realizableProfit(a, opts.shipCapacity));
     const top3 = sorted.slice(0, 3);
-    if (top3.length === 0) continue;
     groups.push({
       id_commodity: id,
       commodityName: nameMap.get(id) ?? `Commodity ${id}`,
       routes: top3,
-      quarantined: routeCount <= ROUTE_COUNT_MIN,
+      quarantined: runnable.length <= ROUTE_COUNT_MIN,
     });
   }
 
   groups.sort((a, b) => {
     if (a.quarantined !== b.quarantined) return a.quarantined ? 1 : -1;
-    return b.routes[0].profit - a.routes[0].profit;
+    return (
+      realizableProfit(b.routes[0], opts.shipCapacity) -
+      realizableProfit(a.routes[0], opts.shipCapacity)
+    );
   });
   return groups.slice(0, DISPLAY_COUNT);
 }

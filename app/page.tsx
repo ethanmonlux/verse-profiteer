@@ -4,7 +4,7 @@ import DebugQt from "@/app/DebugQt";
 import Board from "@/app/Board";
 
 export default async function Home() {
-  const groups = await getTopRoutes();
+  const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 576 });
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-8">
