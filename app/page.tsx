@@ -2,6 +2,7 @@ import { getTopRoutes } from "@/lib/routes";
 import { getVehicles } from "@/lib/uex";
 import DebugPrices from "@/app/DebugPrices";
 import DebugQt from "@/app/DebugQt";
+import DebugTerminals from "@/app/DebugTerminals";
 import Board from "@/app/Board";
 import ShipPicker from "@/app/ShipPicker";
 import SystemsPicker from "@/app/SystemsPicker";
@@ -37,6 +38,7 @@ export default async function Home({
       </p>
       <DebugPrices />
       <DebugQt />
+      <DebugTerminals />
       <SystemsPicker
         selectedSystems={allowedSystems}
         currentShipId={selectedVehicle?.id}

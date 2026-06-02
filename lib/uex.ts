@@ -189,6 +189,48 @@ export async function getCommodityPricesAll(): Promise<CommodityPriceRecord[]> {
   return json.data as CommodityPriceRecord[];
 }
 
+export interface Terminal {
+  id: number;
+  name: string;
+  is_auto_load: number;
+  is_cargo_center: number;
+  has_freight_elevator: number;
+  has_loading_dock: number;
+  has_docking_port: number;
+  star_system_name: string | null;
+  planet_name: string | null;
+  moon_name: string | null;
+  outpost_name: string | null;
+}
+
+export async function getTerminals(): Promise<Terminal[]> {
+  const base = process.env.UEX_BASE_URL;
+  const token = process.env.UEX_API_TOKEN;
+
+  if (!base || !token) {
+    throw new Error("UEX not configured");
+  }
+
+  const res = await fetch(`${base}/terminals`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    next: { revalidate: 43200 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`UEX request failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+
+  if (json.status !== "ok" || !Array.isArray(json.data)) {
+    throw new Error("UEX returned unexpected response");
+  }
+
+  return json.data as Terminal[];
+}
+
 export async function getVehicles(): Promise<Vehicle[]> {
   const base = process.env.UEX_BASE_URL;
   const token = process.env.UEX_API_TOKEN;
