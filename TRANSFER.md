@@ -4,9 +4,18 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
+2026-06-02 — docs-only session. Confirmed project identity: SOLO build for operator's own use + public portfolio piece; monetization shelved. Locked UEX as sole upstream data source (added to CLAUDE.md). Added post-v1 backlog re-prioritization chore to TODO.md. Stateful companion vision section added to TRANSFER.md. No code shipped.
+
 2026-06-01 (scope lock) — v1 scope locked for operator absence (see v1 Scope section below). No code shipped this update; docs only.
 
 2026-06-01 — shipped card information-hierarchy redesign (verified in production); calibration de-gated from "deferred" to STANDING task; profit-per-hour dropped from card (deferred to loop planner, lib/profitPerHour.ts retained); measured auto-load fee (~190 + ~62/SCU per event, charged on both load and unload), fixed load/unload overhead (~72s at 8 SCU), and reconciled sale proceeds (8 SCU Scrap @ 3,555.86 − 488 fee = 27,958, confirmed to the credit); structural findings: buy-side availability collapses to 0 at city TDDs (city = sell terminus, not buy origin), price flat vs quantity + varies by terminal confirmed, terminal-location friction (internal transit cost). Rental-ROI sourcing clarified: use UEX vehicles_rentals_prices feed, not UEX marketplace. Clean QT wall-clock leg still outstanding. Next likely step: capacity-aware ranking & candidate selection.
+
+## Session summary (2026-06-02)
+
+- Confirmed project identity: SOLO build for the operator's own use + a public portfolio piece. NOT a business; monetization shelved (saturated market, RSI policy prohibits donations/paywalls, donation economics don't sustain even Regolith-tier tools — see competitive research artifact).
+- Two consequences locked: (1) UEX is the sole upstream by design, no third-party tool data dependencies (now explicit in CLAUDE.md UEX Hygiene Rules); (2) v1 backlog needs re-prioritization under the solo-user goal next session (TODO Chore added) — demote other-user features, keep correctness, likely pull cargo ledger forward.
+- Wear two hats deliberately: "personal edge" justifies selfish feature choices; "portfolio" justifies keeping the repo clean/legible to a stranger.
+- No code shipped this session; all changes are documentation.
 
 ## Session summary (2026-06-01)
 
@@ -102,7 +111,7 @@ The recurring design throughline this session is HONESTY ABOUT UNCERTAINTY DELIV
 
 ## Pending verification count
 
-0 code verifications pending; 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). v1 item 5 SHIPPED + VERIFIED: buy/sell prices (price_origin/price_destination) added to CommodityRoute interface and rendered per row as "buy {price_origin}/SCU · sell {price_destination}/SCU"; card math verified in production (sell − buy = per-SCU; per-SCU × supply = headline profit; per-SCU × capacity = realizable).
+0 code verifications pending (no code shipped 2026-06-02 — docs only); 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). v1 item 5 SHIPPED + VERIFIED: buy/sell prices (price_origin/price_destination) added to CommodityRoute interface and rendered per row as "buy {price_origin}/SCU · sell {price_destination}/SCU"; card math verified in production (sell − buy = per-SCU; per-SCU × supply = headline profit; per-SCU × capacity = realizable).
 
 ## Next likely step
 

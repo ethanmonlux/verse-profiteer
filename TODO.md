@@ -90,6 +90,7 @@ Goal: a newer player can pick a route and execute it end-to-end without getting 
 
 ## Chore
 
+- Re-prioritize v1 backlog under the confirmed solo-user / personal-portfolio goal (no external user base). The data-source decision changes NO features, but the audience reframe re-ranks them: features justified by OTHER users drop (system filter = convenience not new-player safety; terminal-location interior guide = largely unnecessary for a solo user who already knows the 'verse, defer/cut; "just tell me what to run" beginner-simplicity = drop, build for power-user density). Correctness features stay top (capacity-aware ranking + container_sizes box-size buyability — you fly specific ships and want routes that actually fit). Strongly consider pulling the cargo ledger FORWARD from post-v1 toward #1: it addresses the pain the operator personally hits every run (partial loads, terminals not buying full stacks, losing track of held cargo), and "what annoys me when I fly" is the right roadmap when the user is the builder. CAVEAT: the public-portfolio goal still wants clean architecture, readable README, and basic legibility/empty-states for a stranger evaluating the repo or landing on the deployed site — keep those even where they don't serve the solo-flying use case. Do NOT execute the re-prioritization here; it touches escalation-gated ranking/scope and should be a deliberate decision next session.
 - README with screenshots + setup instructions
 - LICENSE file
 
