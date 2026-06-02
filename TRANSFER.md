@@ -69,6 +69,10 @@ The tool is valuable BECAUSE no API can exist. Every hard problem (staleness, av
 
 North star: the freshest, most honest read on an economy nobody can see directly.
 
+## Stateful companion vision (post-v1)
+
+The recurring design throughline this session is HONESTY ABOUT UNCERTAINTY DELIVERED WITHOUT DISORIENTING THE USER — seen in quantity-confidence framing ("if ~N available", not a promise), commitment-aware re-routing (re-plan the future, never yank the committed leg), and the cargo tracker (learn reality from the user without overriding physics). The cargo tracker is the architectural cornerstone of the stateful half of the tool: it is the data spine feeding leftover-cargo selling, real qty/price sightings (ground-truth the feed can't give, works single-user), profit-vs-estimate verification, loop progress-state, and real P(loss). It is the first persistent state → the Railway+DB threshold. Sequencing: v1 (capacity ranking, system filter, box-size, terminal guide, buy/sell prices [shipped]) makes the BOARD trustworthy; the cargo tracker is the likely highest-leverage NEXT step because the loop planner, risk slider, quantity sightings, and profit verification all build on it. Also noted: UEX ranks by fleet-scale gross income (surfaces thin-margin bulk like Waste); our per-ship per-SCU ranking is the right metric for a solo player.
+
 ## The pivot (why, and what it means)
 
 - DECISION: consume UEX commodities_routes (returns realizable profit, scu_origin/scu_destination already bottlenecked, investment, distance in Gm, price_roi, price_margin) instead of computing routes from commodities_prices_all. Building a worse UEX is not worth it; compete on UI, filters, in-game price overrides, and a chat-box instead.
@@ -98,7 +102,7 @@ North star: the freshest, most honest read on an economy nobody can see directly
 
 ## Pending verification count
 
-0 code verifications pending; 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). v1 item 5 investigation CLOSED: commodities_routes confirmed to return price_origin/price_destination (from routes-29 dump) — no open questions before implementation.
+0 code verifications pending; 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). v1 item 5 SHIPPED + VERIFIED: buy/sell prices (price_origin/price_destination) added to CommodityRoute interface and rendered per row as "buy {price_origin}/SCU · sell {price_destination}/SCU"; card math verified in production (sell − buy = per-SCU; per-SCU × supply = headline profit; per-SCU × capacity = realizable).
 
 ## Next likely step
 
