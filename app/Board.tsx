@@ -89,6 +89,9 @@ export default function Board({
                         <div className="text-xs text-text-muted tabular-nums">
                           buy {route.price_origin.toLocaleString()}/SCU · sell {route.price_destination.toLocaleString()}/SCU
                         </div>
+                        <div className="text-xs text-text-muted">
+                          {route.has_freight_elevator_origin === 1 ? "freight elevator" : "no freight elevator"}
+                        </div>
                         {isExpanded && (
                           <div className="text-xs text-text-muted tabular-nums">
                             {min}–{max} min
@@ -114,6 +117,7 @@ export default function Board({
                   )}
                 </div>
                 <p className="mt-1 text-xs text-text-muted">travel time uncalibrated — seed estimate</p>
+                <p className="mt-0.5 text-xs text-text-muted">freight elevator = manual cargo at buy terminal; auto-load also needs ship storage (hangar), not shown</p>
 
                 <div className={`mt-2 text-xs ${stale ? "text-warning" : "text-text-muted"}`}>
                   Updated {label}

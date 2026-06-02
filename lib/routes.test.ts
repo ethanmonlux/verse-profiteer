@@ -212,6 +212,7 @@ function route(id: number, id_commodity: number, profit: number): CommodityRoute
     scu_reachable: 100,
     container_sizes_origin: "1",
     container_sizes_destination: "1",
+    has_freight_elevator_origin: 0,
   };
 }
 
