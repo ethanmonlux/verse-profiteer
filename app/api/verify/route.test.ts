@@ -34,6 +34,13 @@ const fixtureRoutes: CommodityRoute[] = [
     status_destination: 1,
     score: 80,
     date_added: 1700000000,
+    origin_star_system_name: null,
+    destination_star_system_name: null,
+    id_star_system_origin: 0,
+    id_star_system_destination: 0,
+    scu_reachable: 0,
+    container_sizes_origin: "",
+    container_sizes_destination: "",
   },
 ];
 

@@ -196,8 +196,8 @@ function route(id: number, id_commodity: number, profit: number): CommodityRoute
     profit,
     investment: 0,
     distance: 1,
-    scu_origin: 0,
-    scu_destination: 0,
+    scu_origin: 100,
+    scu_destination: 100,
     scu_margin: 0,
     volatility_origin: 0,
     volatility_destination: 0,
@@ -205,6 +205,13 @@ function route(id: number, id_commodity: number, profit: number): CommodityRoute
     status_destination: 0,
     score: 0,
     date_added: 0,
+    origin_star_system_name: "Stanton",
+    destination_star_system_name: "Stanton",
+    id_star_system_origin: 0,
+    id_star_system_destination: 0,
+    scu_reachable: 100,
+    container_sizes_origin: "1",
+    container_sizes_destination: "1",
   };
 }
 
@@ -215,6 +222,10 @@ const basePrices: CommodityPriceRecord[] = [
   priceRec(2, "Laranite", 50, 0),
   priceRec(2, "Laranite", 0, 200),
 ];
+
+// Default opts: wide system allowlist + generous capacity so realizable profit
+// is supply-bounded and ordering matches raw-profit expectations.
+const OPTS_ALL = { allowedSystems: ["Stanton", "Pyro", "Nyx"], shipCapacity: 100000 };
 
 describe("getTopRoutes", () => {
   beforeEach(() => {
@@ -227,7 +238,7 @@ describe("getTopRoutes", () => {
       Promise.resolve(id === 1 ? [route(101, 1, 500)] : [route(201, 2, 300)])
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const ids = groups.map((g) => g.id_commodity);
     expect(ids).toHaveLength(new Set(ids).size);
     expect(ids).toContain(1);
@@ -245,7 +256,7 @@ describe("getTopRoutes", () => {
       )
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
     expect(g1.routes).toHaveLength(3);
     expect(g1.routes[0].profit).toBe(500);
@@ -262,7 +273,7 @@ describe("getTopRoutes", () => {
       )
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     expect(groups[0].id_commodity).toBe(2);
     expect(groups[1].id_commodity).toBe(1);
   });
@@ -279,7 +290,7 @@ describe("getTopRoutes", () => {
       Promise.resolve([route(id * 100, id, id * 10)])
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     expect(groups.length).toBeLessThanOrEqual(10);
   });
 
@@ -289,7 +300,7 @@ describe("getTopRoutes", () => {
       Promise.resolve([route(id * 100, id, 100)])
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
     expect(g1.commodityName).toBe("Agricium");
     const g2 = groups.find((g) => g.id_commodity === 2)!;
@@ -305,7 +316,7 @@ describe("getTopRoutes", () => {
     mockGetPrices.mockResolvedValue(prices);
     mockGetRoutes.mockResolvedValue([route(301, 3, 100)]);
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     expect(groups[0].commodityName).toBe("Commodity 3");
   });
 
@@ -316,7 +327,7 @@ describe("getTopRoutes", () => {
       Promise.resolve(id === 1 ? [route(101, 1, 500)] : [])
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const ids = groups.map((g) => g.id_commodity);
     expect(ids).toContain(1);
     expect(ids).not.toContain(2);
@@ -337,7 +348,7 @@ describe("getTopRoutes", () => {
       )
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
     expect(g1.quarantined).toBe(true);
   });
@@ -353,7 +364,7 @@ describe("getTopRoutes", () => {
       )
     );
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
     expect(g1.quarantined).toBe(false);
   });
@@ -376,7 +387,7 @@ describe("getTopRoutes", () => {
       return Promise.resolve([route(301, 3, 300), route(302, 3, 200), route(303, 3, 100)]);
     });
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const quarantinedIdx = groups.findIndex((g) => g.id_commodity === 1);
     const healthy2Idx = groups.findIndex((g) => g.id_commodity === 2);
     const healthy3Idx = groups.findIndex((g) => g.id_commodity === 3);
@@ -404,9 +415,84 @@ describe("getTopRoutes", () => {
       return Promise.resolve([route(301, 3, 900)]);
     });
 
-    const groups = await getTopRoutes();
+    const groups = await getTopRoutes(OPTS_ALL);
     const healthy = groups.filter((g) => !g.quarantined);
     expect(healthy[0].id_commodity).toBe(1);
     expect(healthy[1].id_commodity).toBe(2);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Runnable filter and realizable-profit ranking
+  // ---------------------------------------------------------------------------
+
+  it("produces no group for a commodity with only non-runnable routes (origin system excluded)", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1's route has origin in "Fringe" which is not in allowedSystems.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1
+          ? [{ ...route(101, 1, 500), origin_star_system_name: "Fringe" }]
+          : [route(201, 2, 300)]
+      )
+    );
+    const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 100000 });
+    expect(groups.map((g) => g.id_commodity)).not.toContain(1);
+    expect(groups.map((g) => g.id_commodity)).toContain(2);
+  });
+
+  it("excludes a cross-system route but keeps the all-Stanton route for the same commodity", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1: Stanton→Stanton (kept) + Stanton→Pyro (excluded under Stanton-only).
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1
+          ? [
+              route(101, 1, 500),
+              { ...route(102, 1, 600), destination_star_system_name: "Pyro" },
+            ]
+          : [route(201, 2, 300)]
+      )
+    );
+    const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 100000 });
+    const g1 = groups.find((g) => g.id_commodity === 1)!;
+    expect(g1).toBeDefined();
+    expect(g1.routes).toHaveLength(1);
+    expect(g1.routes[0].id).toBe(101);
+  });
+
+  it("ranks groups by realizable profit, not raw profit: high-raw-low-SCU ranks below low-raw-ample-SCU", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1: profit=1000, scu=200 → profitPerScu=5, realizableProfit(50)=round(5×50)=250
+    // Commodity 2: profit=500,  scu=50  → profitPerScu=10, realizableProfit(50)=round(10×50)=500
+    // Raw-profit order: 1>2. Realizable order at shipCapacity=50: 2>1.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1
+          ? [{ ...route(101, 1, 1000), scu_origin: 200, scu_destination: 200 }]
+          : [{ ...route(201, 2, 500), scu_origin: 50, scu_destination: 50 }]
+      )
+    );
+    const groups = await getTopRoutes({ allowedSystems: ["Stanton", "Pyro", "Nyx"], shipCapacity: 50 });
+    expect(groups[0].id_commodity).toBe(2);
+    expect(groups[1].id_commodity).toBe(1);
+  });
+
+  it("quarantine counts only runnable routes: 2-route commodity with 1 excluded is quarantined", async () => {
+    mockGetPrices.mockResolvedValue(basePrices);
+    // Commodity 1: 2 routes total; second has destination "Pyro" (excluded under Stanton-only).
+    // Only 1 runnable → quarantined even though total route count is 2.
+    mockGetRoutes.mockImplementation((id: number) =>
+      Promise.resolve(
+        id === 1
+          ? [
+              route(101, 1, 500),
+              { ...route(102, 1, 400), destination_star_system_name: "Pyro" },
+            ]
+          : [route(201, 2, 300), route(202, 2, 200)]
+      )
+    );
+    const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 100000 });
+    const g1 = groups.find((g) => g.id_commodity === 1)!;
+    expect(g1.quarantined).toBe(true);
   });
 });
