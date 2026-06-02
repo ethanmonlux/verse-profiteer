@@ -14,8 +14,9 @@ export default function ShipPicker({
 }) {
   const router = useRouter();
 
+  // SCU floor drops ground vehicles and token-cargo fighters; 40 is provisional — tune as ship roster evolves.
   const cargoShips = vehicles
-    .filter((v) => v.scu > 0)
+    .filter((v) => v.scu >= 40)
     .sort((a, b) => b.scu - a.scu || a.name.localeCompare(b.name));
 
   const maxScu = cargoShips[0]?.scu ?? 1;
