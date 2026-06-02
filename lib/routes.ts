@@ -51,7 +51,8 @@ export interface CommodityRouteGroup {
 export async function getTopRoutes(opts: {
   allowedSystems: string[];
   shipCapacity: number;
-  autoLoadRequired?: boolean;
+  autoLoadBuy?: boolean;
+  autoLoadSell?: boolean;
 }): Promise<CommodityRouteGroup[]> {
   const [prices, terminals] = await Promise.all([getCommodityPricesAll(), getTerminals()]);
   const autoLoadMap = new Map<number, number>();
@@ -80,9 +81,8 @@ export async function getTopRoutes(opts: {
         r.destination_star_system_name !== null &&
         allowedSet.has(r.origin_star_system_name) &&
         allowedSet.has(r.destination_star_system_name) &&
-        (!opts.autoLoadRequired ||
-          (autoLoadMap.get(r.id_terminal_origin) === 1 &&
-            autoLoadMap.get(r.id_terminal_destination) === 1))
+        (!opts.autoLoadBuy || autoLoadMap.get(r.id_terminal_origin) === 1) &&
+        (!opts.autoLoadSell || autoLoadMap.get(r.id_terminal_destination) === 1)
     );
     if (runnable.length === 0) continue;
     const sorted = runnable

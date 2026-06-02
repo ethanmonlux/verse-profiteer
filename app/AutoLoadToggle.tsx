@@ -3,34 +3,55 @@
 import { useRouter } from "next/navigation";
 
 export default function AutoLoadToggle({
-  autoLoadRequired,
+  autoLoadBuy,
+  autoLoadSell,
   selectedSystems,
   currentShipId,
 }: {
-  autoLoadRequired: boolean;
+  autoLoadBuy: boolean;
+  autoLoadSell: boolean;
   selectedSystems: string[];
   currentShipId?: number;
 }) {
   const router = useRouter();
 
-  function toggle() {
+  function toggleBuy() {
     const systemsPart = `systems=${selectedSystems.join(",")}`;
     const shipPart = currentShipId !== undefined ? `&ship=${currentShipId}` : "";
-    const autoLoadPart = autoLoadRequired ? "" : "&autoLoad=1";
-    router.push(`?${systemsPart}${shipPart}${autoLoadPart}`);
+    const buyPart = autoLoadBuy ? "" : "&autoLoadBuy=1";
+    const sellPart = autoLoadSell ? "&autoLoadSell=1" : "";
+    router.push(`?${systemsPart}${shipPart}${buyPart}${sellPart}`);
+  }
+
+  function toggleSell() {
+    const systemsPart = `systems=${selectedSystems.join(",")}`;
+    const shipPart = currentShipId !== undefined ? `&ship=${currentShipId}` : "";
+    const buyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
+    const sellPart = autoLoadSell ? "" : "&autoLoadSell=1";
+    router.push(`?${systemsPart}${shipPart}${buyPart}${sellPart}`);
   }
 
   return (
     <div className="flex items-center gap-2 mb-4">
       <button
-        onClick={toggle}
+        onClick={toggleBuy}
         className={`rounded border px-3 py-1 text-sm transition-colors ${
-          autoLoadRequired
+          autoLoadBuy
             ? "border-accent text-accent"
             : "border-border text-text-muted hover:border-accent hover:text-accent"
         }`}
       >
-        Auto-load required
+        Auto-load at buy
+      </button>
+      <button
+        onClick={toggleSell}
+        className={`rounded border px-3 py-1 text-sm transition-colors ${
+          autoLoadSell
+            ? "border-accent text-accent"
+            : "border-border text-text-muted hover:border-accent hover:text-accent"
+        }`}
+      >
+        Auto-unload at sell
       </button>
     </div>
   );
