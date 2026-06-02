@@ -1,6 +1,7 @@
 import {
   getCommodityPricesAll,
   getCommodityRoutes,
+  getTerminals,
   CommodityPriceRecord,
   CommodityRoute,
 } from "@/lib/uex";
@@ -35,18 +36,28 @@ const DISPLAY_COUNT = 10;
 // Start at 1 (only single-route commodities, e.g. Osoian Hides). Route count is a weak proxy — see Outlier guard v2 in TODO. Do not loosen without that work.
 const ROUTE_COUNT_MIN = 1;
 
+export type RouteWithAutoLoad = CommodityRoute & {
+  autoLoadOrigin: number;
+  autoLoadDestination: number;
+};
+
 export interface CommodityRouteGroup {
   id_commodity: number;
   commodityName: string;
-  routes: CommodityRoute[];
+  routes: RouteWithAutoLoad[];
   quarantined: boolean;
 }
 
 export async function getTopRoutes(opts: {
   allowedSystems: string[];
   shipCapacity: number;
+  autoLoadRequired?: boolean;
 }): Promise<CommodityRouteGroup[]> {
-  const prices = await getCommodityPricesAll();
+  const [prices, terminals] = await Promise.all([getCommodityPricesAll(), getTerminals()]);
+  const autoLoadMap = new Map<number, number>();
+  for (const t of terminals) {
+    autoLoadMap.set(t.id, t.is_auto_load);
+  }
   const ids = shortlistCommodities(prices, SHORTLIST_SIZE);
 
   const nameMap = new Map<number, string>();
@@ -68,13 +79,24 @@ export async function getTopRoutes(opts: {
         r.origin_star_system_name !== null &&
         r.destination_star_system_name !== null &&
         allowedSet.has(r.origin_star_system_name) &&
-        allowedSet.has(r.destination_star_system_name)
+        allowedSet.has(r.destination_star_system_name) &&
+        (!opts.autoLoadRequired ||
+          (autoLoadMap.get(r.id_terminal_origin) === 1 &&
+            autoLoadMap.get(r.id_terminal_destination) === 1))
     );
     if (runnable.length === 0) continue;
     const sorted = runnable
       .slice()
       .sort((a, b) => realizableProfit(b, opts.shipCapacity) - realizableProfit(a, opts.shipCapacity));
-    const top3 = sorted.slice(0, 3);
+    const top3: RouteWithAutoLoad[] = sorted.slice(0, 3).map((r) => ({
+      ...r,
+      autoLoadOrigin: autoLoadMap.has(r.id_terminal_origin)
+        ? (autoLoadMap.get(r.id_terminal_origin) as number)
+        : -1,
+      autoLoadDestination: autoLoadMap.has(r.id_terminal_destination)
+        ? (autoLoadMap.get(r.id_terminal_destination) as number)
+        : -1,
+    }));
     groups.push({
       id_commodity: id,
       commodityName: nameMap.get(id) ?? `Commodity ${id}`,

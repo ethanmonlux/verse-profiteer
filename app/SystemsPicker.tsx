@@ -7,9 +7,11 @@ const ALL_SYSTEMS = ["Stanton", "Pyro", "Nyx"] as const;
 export default function SystemsPicker({
   selectedSystems,
   currentShipId,
+  autoLoadRequired,
 }: {
   selectedSystems: string[];
   currentShipId?: number;
+  autoLoadRequired: boolean;
 }) {
   const router = useRouter();
 
@@ -19,7 +21,8 @@ export default function SystemsPicker({
       : [...selectedSystems, system];
     if (next.length === 0) return;
     const shipPart = currentShipId !== undefined ? `&ship=${currentShipId}` : "";
-    router.push(`?systems=${next.join(",")}${shipPart}`);
+    const autoLoadPart = autoLoadRequired ? "&autoLoad=1" : "";
+    router.push(`?systems=${next.join(",")}${shipPart}${autoLoadPart}`);
   }
 
   return (

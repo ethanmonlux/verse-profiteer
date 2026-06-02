@@ -6,6 +6,7 @@ import DebugTerminals from "@/app/DebugTerminals";
 import Board from "@/app/Board";
 import ShipPicker from "@/app/ShipPicker";
 import SystemsPicker from "@/app/SystemsPicker";
+import AutoLoadToggle from "@/app/AutoLoadToggle";
 
 export default async function Home({
   searchParams,
@@ -15,6 +16,7 @@ export default async function Home({
   const params = await searchParams;
   const shipParam = typeof params.ship === "string" ? params.ship : undefined;
   const systemsParam = typeof params.systems === "string" ? params.systems : undefined;
+  const autoLoadRequired = params.autoLoad === "1";
 
   const vehicles = await getVehicles();
   const allowedSystems = systemsParam
@@ -27,7 +29,7 @@ export default async function Home({
 
   const groups =
     selectedVehicle !== undefined
-      ? await getTopRoutes({ allowedSystems, shipCapacity: selectedVehicle.scu })
+      ? await getTopRoutes({ allowedSystems, shipCapacity: selectedVehicle.scu, autoLoadRequired })
       : null;
 
   return (
@@ -42,11 +44,18 @@ export default async function Home({
       <SystemsPicker
         selectedSystems={allowedSystems}
         currentShipId={selectedVehicle?.id}
+        autoLoadRequired={autoLoadRequired}
+      />
+      <AutoLoadToggle
+        autoLoadRequired={autoLoadRequired}
+        selectedSystems={allowedSystems}
+        currentShipId={selectedVehicle?.id}
       />
       <ShipPicker
         vehicles={vehicles}
         selectedShipId={selectedVehicle?.id}
         currentSystems={allowedSystems}
+        autoLoadRequired={autoLoadRequired}
       />
       {groups !== null && selectedVehicle !== undefined && (
         <Board groups={groups} capacity={selectedVehicle.scu} />

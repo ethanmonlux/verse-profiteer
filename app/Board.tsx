@@ -89,6 +89,16 @@ export default function Board({
                         <div className="text-xs text-text-muted tabular-nums">
                           buy {route.price_origin.toLocaleString()}/SCU · sell {route.price_destination.toLocaleString()}/SCU
                         </div>
+                        <div className="text-xs text-text-muted">
+                          {"load "}
+                          <span className={route.autoLoadOrigin === 1 ? "text-profit" : "text-text-muted"}>
+                            {route.autoLoadOrigin === 1 ? "⚡" : route.autoLoadOrigin === 0 ? "✋" : "—"}
+                          </span>
+                          {" · unload "}
+                          <span className={route.autoLoadDestination === 1 ? "text-profit" : "text-text-muted"}>
+                            {route.autoLoadDestination === 1 ? "⚡" : route.autoLoadDestination === 0 ? "✋" : "—"}
+                          </span>
+                        </div>
                         {isExpanded && (
                           <div className="text-xs text-text-muted tabular-nums">
                             {min}–{max} min
