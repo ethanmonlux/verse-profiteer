@@ -7,12 +7,14 @@ export default function ShipPicker({
   vehicles,
   selectedShipId,
   currentSystems,
-  autoLoadRequired,
+  autoLoadBuy,
+  autoLoadSell,
 }: {
   vehicles: Vehicle[];
   selectedShipId?: number;
   currentSystems: string[];
-  autoLoadRequired: boolean;
+  autoLoadBuy: boolean;
+  autoLoadSell: boolean;
 }) {
   const router = useRouter();
 
@@ -24,8 +26,9 @@ export default function ShipPicker({
   const maxScu = cargoShips[0]?.scu ?? 1;
 
   function selectShip(id: number) {
-    const autoLoadPart = autoLoadRequired ? "&autoLoad=1" : "";
-    router.push(`?ship=${id}&systems=${currentSystems.join(",")}${autoLoadPart}`);
+    const autoLoadBuyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
+    const autoLoadSellPart = autoLoadSell ? "&autoLoadSell=1" : "";
+    router.push(`?ship=${id}&systems=${currentSystems.join(",")}${autoLoadBuyPart}${autoLoadSellPart}`);
   }
 
   return (

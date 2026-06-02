@@ -16,7 +16,8 @@ export default async function Home({
   const params = await searchParams;
   const shipParam = typeof params.ship === "string" ? params.ship : undefined;
   const systemsParam = typeof params.systems === "string" ? params.systems : undefined;
-  const autoLoadRequired = params.autoLoad === "1";
+  const autoLoadBuy = params.autoLoadBuy === "1";
+  const autoLoadSell = params.autoLoadSell === "1";
 
   const vehicles = await getVehicles();
   const allowedSystems = systemsParam
@@ -29,7 +30,7 @@ export default async function Home({
 
   const groups =
     selectedVehicle !== undefined
-      ? await getTopRoutes({ allowedSystems, shipCapacity: selectedVehicle.scu, autoLoadRequired })
+      ? await getTopRoutes({ allowedSystems, shipCapacity: selectedVehicle.scu, autoLoadBuy, autoLoadSell })
       : null;
 
   return (
@@ -44,10 +45,12 @@ export default async function Home({
       <SystemsPicker
         selectedSystems={allowedSystems}
         currentShipId={selectedVehicle?.id}
-        autoLoadRequired={autoLoadRequired}
+        autoLoadBuy={autoLoadBuy}
+        autoLoadSell={autoLoadSell}
       />
       <AutoLoadToggle
-        autoLoadRequired={autoLoadRequired}
+        autoLoadBuy={autoLoadBuy}
+        autoLoadSell={autoLoadSell}
         selectedSystems={allowedSystems}
         currentShipId={selectedVehicle?.id}
       />
@@ -55,7 +58,8 @@ export default async function Home({
         vehicles={vehicles}
         selectedShipId={selectedVehicle?.id}
         currentSystems={allowedSystems}
-        autoLoadRequired={autoLoadRequired}
+        autoLoadBuy={autoLoadBuy}
+        autoLoadSell={autoLoadSell}
       />
       {groups !== null && selectedVehicle !== undefined && (
         <Board groups={groups} capacity={selectedVehicle.scu} />
