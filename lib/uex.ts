@@ -45,6 +45,13 @@ export interface CommodityRoute {
   status_destination: number;
   score: number;
   date_added: number;
+  origin_star_system_name: string | null;
+  destination_star_system_name: string | null;
+  id_star_system_origin: number;
+  id_star_system_destination: number;
+  scu_reachable: number;
+  container_sizes_origin: string;
+  container_sizes_destination: string;
 }
 
 export async function getCommodityRoutes(idCommodity: number): Promise<CommodityRoute[]> {
@@ -144,6 +151,14 @@ export async function getItemsAttributes(idCategory: number): Promise<ItemAttrib
   return json.data as ItemAttribute[];
 }
 
+export interface Vehicle {
+  id: number;
+  name: string;
+  scu: number;
+  container_sizes: string;
+  game_version: string;
+}
+
 export async function getCommodityPricesAll(): Promise<CommodityPriceRecord[]> {
   const base = process.env.UEX_BASE_URL;
   const token = process.env.UEX_API_TOKEN;
@@ -170,4 +185,32 @@ export async function getCommodityPricesAll(): Promise<CommodityPriceRecord[]> {
   }
 
   return json.data as CommodityPriceRecord[];
+}
+
+export async function getVehicles(): Promise<Vehicle[]> {
+  const base = process.env.UEX_BASE_URL;
+  const token = process.env.UEX_API_TOKEN;
+
+  if (!base || !token) {
+    throw new Error("UEX not configured");
+  }
+
+  const res = await fetch(`${base}/vehicles`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    next: { revalidate: 86400 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`UEX request failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+
+  if (json.status !== "ok" || !Array.isArray(json.data)) {
+    throw new Error("UEX returned unexpected response");
+  }
+
+  return json.data as Vehicle[];
 }

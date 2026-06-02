@@ -35,6 +35,13 @@ function makeRoute(
     status_destination: 0,
     score: 0,
     date_added: 0,
+    origin_star_system_name: null,
+    destination_star_system_name: null,
+    id_star_system_origin: 0,
+    id_star_system_destination: 0,
+    scu_reachable: 0,
+    container_sizes_origin: "",
+    container_sizes_destination: "",
   };
 }
 
