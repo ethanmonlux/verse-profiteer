@@ -1,10 +1,33 @@
 import { getTopRoutes } from "@/lib/routes";
+import { getVehicles } from "@/lib/uex";
 import DebugPrices from "@/app/DebugPrices";
 import DebugQt from "@/app/DebugQt";
 import Board from "@/app/Board";
+import ShipPicker from "@/app/ShipPicker";
+import SystemsPicker from "@/app/SystemsPicker";
 
-export default async function Home() {
-  const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 576 });
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const shipParam = typeof params.ship === "string" ? params.ship : undefined;
+  const systemsParam = typeof params.systems === "string" ? params.systems : undefined;
+
+  const vehicles = await getVehicles();
+  const allowedSystems = systemsParam
+    ? systemsParam.split(",").filter((s) => s.length > 0)
+    : ["Stanton"];
+
+  const shipId = shipParam !== undefined ? parseInt(shipParam, 10) : NaN;
+  const selectedVehicle =
+    !isNaN(shipId) ? vehicles.find((v) => v.id === shipId) : undefined;
+
+  const groups =
+    selectedVehicle !== undefined
+      ? await getTopRoutes({ allowedSystems, shipCapacity: selectedVehicle.scu })
+      : null;
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-8">
@@ -14,7 +37,18 @@ export default async function Home() {
       </p>
       <DebugPrices />
       <DebugQt />
-      <Board groups={groups} />
+      <SystemsPicker
+        selectedSystems={allowedSystems}
+        currentShipId={selectedVehicle?.id}
+      />
+      <ShipPicker
+        vehicles={vehicles}
+        selectedShipId={selectedVehicle?.id}
+        currentSystems={allowedSystems}
+      />
+      {groups !== null && selectedVehicle !== undefined && (
+        <Board groups={groups} capacity={selectedVehicle.scu} />
+      )}
     </main>
   );
 }

@@ -19,32 +19,26 @@ function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
   return { label: `${Math.floor(diffSec / 31536000)}yr ago`, stale };
 }
 
-export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
-  const [capacityStr, setCapacityStr] = useState("");
-  const capacity = parseFloat(capacityStr);
+export default function Board({
+  groups,
+  capacity,
+}: {
+  groups: CommodityRouteGroup[];
+  capacity: number;
+}) {
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-4">
-        <label htmlFor="ship-capacity" className="text-sm text-text-muted">
-          Ship capacity (SCU)
-        </label>
-        <input
-          id="ship-capacity"
-          type="number"
-          min={1}
-          className="w-24 rounded border border-border bg-bg-card px-2 py-1 text-sm tabular-nums text-accent placeholder:text-text-muted focus:outline-none focus:border-accent"
-          value={capacityStr}
-          onChange={(e) => setCapacityStr(e.target.value)}
-          placeholder="—"
-        />
-      </div>
-
       {groups.length === 0 ? (
         <p className="text-center text-text-muted">No routes available.</p>
       ) : (
         <div className="flex flex-col gap-3">
+          {groups.length < 10 && (
+            <p className="text-sm text-text-muted">
+              {groups.length} runnable route{groups.length !== 1 ? "s" : ""} in your selected systems
+            </p>
+          )}
           {groups.map((group) => {
             const { label, stale } = relativeAge(group.routes[0].date_added);
             const isExpanded = expandedCards.has(group.id_commodity);
@@ -76,11 +70,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                     const { min, max } = estimateTravelRange(route);
                     const pps = profitPerScu(route);
                     const realizable = realizableProfit(route, capacity);
-                    const bottleneck = routeBottleneck(route);
-                    const hasCapacity = Number.isFinite(capacity) && capacity > 0;
-                    const haulable = hasCapacity
-                      ? Math.min(capacity, route.scu_origin, route.scu_destination)
-                      : null;
+                    const haulable = Math.min(capacity, route.scu_origin, route.scu_destination);
                     const supply = routeBottleneck(route);
                     return (
                       <div key={route.id} className="flex flex-col gap-0.5">
@@ -91,7 +81,7 @@ export default function Board({ groups }: { groups: CommodityRouteGroup[] }) {
                           )}
                         </div>
                         <div className="text-xs text-text-muted tabular-nums">
-                          {haulable !== null ? `pick up ${haulable.toLocaleString()} SCU · ${supply.toLocaleString()} available` : `at ${bottleneck} SCU max supply`}
+                          pick up {haulable.toLocaleString()} SCU · {supply.toLocaleString()} available
                         </div>
                         <div className="text-xs text-text-muted tabular-nums">
                           {pps.toLocaleString()}/SCU
