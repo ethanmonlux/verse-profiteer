@@ -2,44 +2,37 @@
 
 Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, TODO.md, VERIFICATIONS.md (Pending). Flag if this file is stale relative to those.
 
-## Session state (2026-06-02 — capacity-aware ranking PR)
+## Session state (2026-06-02 — capacity-ranking-auto-load)
 
-### SHIPPED + VERIFIED THIS SESSION
+### SHIPPED + VERIFIED THIS SESSION (all merged to main, on production)
 
-- Capacity-aware ranking engine + ship/systems gate (the (b)+(d)+(c) PR). Fixed the rank bug where headline profit didn't match sort order (server ranked at hardcoded 576, client displayed at NaN/Infinity). Now: board is gated behind ship + systems selection; selected ship's SCU is the single capacity source feeding both server ranking and client display. Verified live on production — board descends correctly by headline profit.
-- PR-1 (picker fix): SHIPPED + VERIFIED on production. lib/uex.ts added is_cargo + is_ground_vehicle to Vehicle interface; ShipPicker.tsx filter is now `v.is_cargo === 1 && v.is_ground_vehicle === 0` (replaced the wrong `scu >= 40` floor); ship names made visible (unselected name span was missing a text color — now text-text-muted); temporary app/api/debug-vehicles route DELETED. Confirmed on deploy: names readable, ground vehicles + tiny-SCU tail gone, debug route absent.
-- IMPORTANT SCOPE NOTE: capacity-aware ranking is SHIP-SCU-BOUND ONLY. It clamps to the ship's full hull SCU and assumes perfect packing. The container_sizes intersection (vehicle.container_sizes ∩ commodity.container_sizes) is NOT done — still overstates realizable profit for mismatched box sizes. Do NOT mark "capacity-aware ranking" complete; it's partial.
-
-### QUEUED — WRITTEN BUT NOT RUN (one PR remaining)
-
-- PR-2 (auto-load label): lib/uex.ts add has_freight_elevator_origin to CommodityRoute interface; Board.tsx add per-route "⚡ auto-load" (when 1) / "hand-load" (when 0) line after buy/sell; add ONE-per-card caveat "auto-load is feed-reported and may be inaccurate" near the travel-time note. Display-only. Own PR. Prompt is fully drafted and ready to run.
+- Capacity-aware ranking engine + ship/systems gate. Fixed the rank bug (server ranked at hardcoded 576, client displayed at NaN/Infinity → headline profit didn't match sort order). Board gated behind ship + systems selection; selected ship SCU is the single capacity source for both server ranking and display. CAPACITY IS SHIP-SCU-BOUND ONLY (assumes perfect packing) — container_sizes intersection NOT done, do not mark capacity-aware ranking complete.
+- Picker fix: filter v.is_cargo === 1 && v.is_ground_vehicle === 0 (is_cargo = "has a cargo grid", liberal — keeps small fighters like Avenger/M50; kept intentionally). Ship names fixed (was CSS, missing text color). /api/debug-vehicles deleted.
+- verify-terminals: getTerminals() + Terminal interface (12h TTL) in lib/uex.ts; /api/verify-terminals debug surface + DebugTerminals UI. On the strip-before-public list (now 4 surfaces: verify, verify-prices, verify-qt, verify-terminals).
+- Auto-load labels + TWO INDEPENDENT TOGGLES: join is_auto_load from /terminals onto routes by id_terminal_origin AND id_terminal_destination (Map lookup), exposing autoLoadOrigin/autoLoadDestination (1/0/-1). Per-route label "load ⚡/✋ · unload ⚡/✋". Two independent toggles: "Auto-load at buy" (autoLoadBuy param) and "Auto-unload at sell" (autoLoadSell param). Server filter: (!autoLoadBuy || origin===1) && (!autoLoadSell || dest===1). URL builder preserves both toggle states independently.
 
 ### KEY FINDINGS / DECISIONS
 
-- Ship picker: filter by is_cargo type, NOT an SCU floor. CONFIRMED ON DEPLOY that is_cargo in UEX means "has a cargo grid" (liberal — keeps small-cargo fighters like Avenger Titan, M50, Mustang), NOT "dedicated hauler." Kept as-is intentionally: it's the cleanest single-field filter; small-cargo ships are scroll-past noise; tightening would need an arbitrary SCU floor (fights fly-everything preference) or a hand-curated list (rejected maintenance burden). is_cargo===1 also cut the 100i/125a (they are is_cargo:0).
-- Backlog footnote: Galaxy Cargo Module appears with scu 0 (an is_cargo module/addon). Harmless (sorts to bottom). If ever tightening, add `&& v.scu > 0` to the picker filter.
-- Blank ship names were a CSS bug (missing default text color), not missing data.
-- AUTO-LOAD PROXY: has_freight_elevator_origin is the best available proxy for auto-load at the buy terminal. Passed 7/7 ground-truth checks (New Babbage, Area 18, Lorville, Baijini, Port Tressler, ARC-L4, Nyx Gateway — all confirmed auto-load by operator, all flag=1). ZERO confirmed failures. Still a proxy: there is NO true auto-load field and NO hangar field on the route data.
-- CORRECTION TO PRIOR RECORD: Terra Mills was NOT a proxy failure. Operator could not FIND the kiosk; auto-load was never confirmed broken there. Any earlier note calling Terra Mills a capability-flag failure is struck.
-- AUTO-LOAD MECHANIC (hypothesis): likely tied to enclosed hangar storage — cities (NB, Area 18) and stations have hangars and auto-load; open-pad outposts (Terra Mills) likely cannot. NOT expressible from route data (no hangar field; is_space_station misses cities since cities are on-ground; freight_elevator flags pad outposts too). Proper future fix: /terminals hangar/auto-load field OR hand-maintained outpost pad-only notes (ties to Tier-2 terminal notes).
-- HARD STRIP of non-auto-load routes REJECTED: only ~2% of pooled routes are hand-load-origin and they are all low-SCU/low-profit (self-bury under capacity ranking). Strip buys nothing and risks cutting good routes on a proxy false-negative. Flag-don't-strip chosen.
-- TERMINAL-LOCATION GUIDE re-prioritized UP (Tier 1 + reconsider Tier 2): operator couldn't find the Terra Mills kiosk mid-run — this, not auto-load, is what broke the Fresh Food run. Tier 1 (system/planet/moon/outpost) is free on the route response. Strong real-play evidence for a feature previously deprioritized as "I know the 'verse."
-- Decision #1 (backlog re-prioritization under solo-user goal): RATIFIED. Capacity-aware ranking + system filter = correctness top priority (system filter promoted from demote because operator is Stanton-only and the board headlined un-runnable Pyro routes). Terminal-location guide Tier 2 deferred-but-reconsider. Cargo ledger sits behind the correctness block, not at #1. Decision #2 (ledger graduates to build + CLAUDE.md rule) deferred until correctness block ships.
+- is_auto_load on /terminals is the REAL authoritative auto-load field. VERIFIED: Terra Mills=0, New Babbage/Port Tressler/Area 18/Baijini/ARC-L4=1. 289 auto-load / 534 not, of 823 terminals.
+- FREIGHT-ELEVATOR PROXY DISPROVEN AND ABANDONED: HDMS-Lathan/Thedus have freight_elevator=1 but is_auto_load=0. The earlier "7/7 proxy" finding is STRUCK (only looked good because all tested terminals were stations). Auto-load mechanic = requires ship STORAGE (hangar): cities + stations yes, open-pad outposts no. Confirmed by community + data.
+- PROFIT FINDING: highest-profit routes are almost all HAND-LOAD origin (remote outposts). Best overall +1,364,740; best with origin auto-load +137,280; best both-ends +137,280. Requiring auto-load costs ~10x ceiling. ~12% routes buy-auto, ~40% sell-auto, ~6% both. Auto-load filter is a CONVENIENCE/TIME tool, NOT a profit strategy — defaults OFF. SUPERSEDES earlier wrong note that hand-load routes were "low-value dregs."
+- TOGGLE-INDEPENDENCE INVESTIGATION (resolved, no bug): buy-only board appeared to show all ⚡/⚡, suspected of forcing both ends. Traced it: the toggles ARE independent and the filter code is correct. In Stanton, the only buy-auto/sell-hand routes are NEGATIVE profit (sell to scrap/salvage yards), so they never reach the top of the profit-ranked board. The ⚡/⚡ appearance is profit-ranking + Stanton geography, not a filter bug. No fix needed.
+- Terra Mills: operator couldn't FIND the kiosk (location-guide gap); is_auto_load=0 confirms it also genuinely lacks auto-load. Both true, separate issues.
 
-### STANDING VERIFICATION ITEMS
+### BANKED FOR NEXT SESSION
 
-- Auto-load proxy: field-test outpost ORIGINS specifically (all 7 confirmed terminals were stations/cities; outpost origins untested). Note terminal name + did auto-load work + what the card said.
-- Travel-time constants: clean QT wall-clock leg still uncaptured (pre-existing).
-- VF-1 (/vehicles field names): name/scu/is_cargo/is_ground_vehicle now live-confirmed (via the now-deleted debug-vehicles dump, 278 vehicles). container_sizes/game_version still only wingman-ai-corroborated.
+- PR-C (foregone-profit comparison): show profit given up by requiring auto-load (best filtered route vs best overall). Needs getTopRoutes to compute filtered + unfiltered tops in one pass — ranking-function change.
+- HEADLINE NEXT SESSION — ROUTE STACKING (big design session, ties to cargo-ledger/loop vision + Decision #2, now ACTIVE): TWO forms tackled as one vision — (1) multi-commodity manifest per single run (fill one hold, same origin→destination, maximize SCU); (2) multi-leg loops (A→B→C→A, never deadhead). Changes core model from "rank independent routes" to "compose routes into a plan." Decision-first design like the capacity gate — do NOT bolt on. This is where both-ends auto-load pays off (loop nodes are unload + reload).
 
-### BACKLOG ADDITIONS THIS SESSION
+### STANDING BACKLOG / VERIFICATION
 
-- container_sizes intersection (true usable capacity vs. hull SCU) — outstanding half of capacity-aware ranking.
-- Ship picker polish: capacity-bar cards shipped, names fixed; own-silhouette icons fast-follow still open; optional `scu > 0` guard for the Galaxy module.
-- Tier 1 terminal location on route card (free from response).
-- Reconsider Tier 2 hand-authored terminal notes (operator's own outpost kiosk/pad notes).
-- Short-board-at-exactly-10 edge (no "capped view" indicator when exactly 10 returned).
-- CLAUDE.md note (escalates to operator): verify-first failures should be REPORTED AS BLOCKED, not worked around by pushing debug endpoints (CC created an unprompted /api/debug-vehicles earlier this session).
+- /terminals carries planet_name/moon_name/outpost_name — Tier-1 location data, joinable like is_auto_load. Re-prioritized UP: operator couldn't find Terra Mills kiosk mid-run. Surface "Cellin · Terra Mills" on cards. Fold into a join PR or its own.
+- Reconsider Tier-2 hand-authored terminal interior notes (which kiosk/wall).
+- container_sizes intersection (usable capacity vs hull SCU) — outstanding half of capacity-aware ranking.
+- Travel-time / profit-per-hour still uncalibrated ("seed estimate" on every card) — would properly model hand-load time-cost vs higher margin.
+- Galaxy Cargo Module shows scu 0; add `&& v.scu > 0` to picker if ever tightening.
+- CLAUDE.md notes (escalate to operator): (1) verify-first failures should be REPORTED AS BLOCKED, not worked around with debug endpoints; (2) branch-off-main must happen BEFORE a fresh-start prompt runs — CC builds on whatever branch is checked out (caused debug-vehicles and freight-elevator to ride along on wrong branches this session).
+- Decision #1 RATIFIED. Decision #2 (loop model graduates to build + CLAUDE.md rule) ACTIVE — next session's subject.
 
 ---
 
