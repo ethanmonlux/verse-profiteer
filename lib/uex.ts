@@ -157,6 +157,8 @@ export interface Vehicle {
   scu: number;
   container_sizes: string;
   game_version: string;
+  is_cargo: number;
+  is_ground_vehicle: number;
 }
 
 export async function getCommodityPricesAll(): Promise<CommodityPriceRecord[]> {
