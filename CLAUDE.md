@@ -12,6 +12,7 @@ All UEX data access goes through a single module (`lib/uex.ts`) so the caching/f
 
 ## UEX Hygiene Rules
 
+- UEX is the SOLE upstream data source, by design. verse-profiteer fetches directly from the UEX API (isolated in `lib/uex.ts`) and computes all route ranking, profit, travel-time, and confidence/staleness logic itself. Do NOT add dependencies on third-party Star Citizen tools (e.g. Schaulers, SC Trade Tools) as data sources. Rationale: (1) those tools are themselves UEX consumers — routing through them is strictly worse than fetching UEX directly (UEX → third party → us vs UEX → us); (2) they expose no public/stable API, so any integration would mean scraping undocumented endpoints with no recourse when they change; (3) the route ranking / profit / confidence calculations are the project's whole point and primary differentiation — offloading them to another tool's finished output defeats the purpose and would make this a reskin; (4) the single-isolated-upstream assumption is what the caching TTL matrix, staleness gating, and `lib/uex.ts` isolation rule are all built around. Reference implementations of others' logic (e.g. sc-cargo.space container-fit) may be consulted as REFERENCE only — reimplemented in our own code, never called as a service.
 - `UEX_BASE_URL` env var only — never hardcoded.
 - `UEX_API_TOKEN` server-side only; never in the client bundle or logs.
 - All UEX calls go through server-side route handlers.
