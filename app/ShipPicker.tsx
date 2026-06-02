@@ -7,10 +7,12 @@ export default function ShipPicker({
   vehicles,
   selectedShipId,
   currentSystems,
+  autoLoadRequired,
 }: {
   vehicles: Vehicle[];
   selectedShipId?: number;
   currentSystems: string[];
+  autoLoadRequired: boolean;
 }) {
   const router = useRouter();
 
@@ -22,7 +24,8 @@ export default function ShipPicker({
   const maxScu = cargoShips[0]?.scu ?? 1;
 
   function selectShip(id: number) {
-    router.push(`?ship=${id}&systems=${currentSystems.join(",")}`);
+    const autoLoadPart = autoLoadRequired ? "&autoLoad=1" : "";
+    router.push(`?ship=${id}&systems=${currentSystems.join(",")}${autoLoadPart}`);
   }
 
   return (

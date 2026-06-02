@@ -5,6 +5,7 @@ import type { CommodityPriceRecord, CommodityRoute } from "@/lib/uex";
 vi.mock("@/lib/uex", () => ({
   getCommodityPricesAll: vi.fn(),
   getCommodityRoutes: vi.fn(),
+  getTerminals: vi.fn(),
 }));
 
 function rec(
@@ -145,10 +146,11 @@ describe("shortlistCommodities", () => {
 // getTopRoutes — mocked UEX layer
 // ---------------------------------------------------------------------------
 
-import { getCommodityPricesAll, getCommodityRoutes } from "@/lib/uex";
+import { getCommodityPricesAll, getCommodityRoutes, getTerminals } from "@/lib/uex";
 
 const mockGetPrices = getCommodityPricesAll as ReturnType<typeof vi.fn>;
 const mockGetRoutes = getCommodityRoutes as ReturnType<typeof vi.fn>;
+const mockGetTerminals = getTerminals as ReturnType<typeof vi.fn>;
 
 function priceRec(
   id_commodity: number,
@@ -230,6 +232,7 @@ const OPTS_ALL = { allowedSystems: ["Stanton", "Pyro", "Nyx"], shipCapacity: 100
 describe("getTopRoutes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetTerminals.mockResolvedValue([]);
   });
 
   it("returns one group per commodity with no duplicates", async () => {
