@@ -4,6 +4,8 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Last updated
 
+2026-06-02 — docs-only session (second update). Project ambition expanded: from cargo-trading tool to a personal companion for all ECONOMIC loops (trading/mining/salvage/refining), unified by a loop-agnostic cargo ledger + cross-loop aUEC/hr. Vision note + scope guardrail added to TODO.md backlog. Sequencing unchanged: trading + ledger first, earn each subsequent loop by finishing the prior one. No code shipped.
+
 2026-06-02 — docs-only session. Confirmed project identity: SOLO build for operator's own use + public portfolio piece; monetization shelved. Locked UEX as sole upstream data source (added to CLAUDE.md). Added post-v1 backlog re-prioritization chore to TODO.md. Stateful companion vision section added to TRANSFER.md. No code shipped.
 
 2026-06-01 (scope lock) — v1 scope locked for operator absence (see v1 Scope section below). No code shipped this update; docs only.
@@ -12,6 +14,7 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 
 ## Session summary (2026-06-02)
 
+- Project ambition expanded: from cargo-trading tool to a personal companion for all ECONOMIC loops (trading/mining/salvage/refining), unified by a loop-agnostic cargo ledger + cross-loop aUEC/hr comparison. Key design decision recorded in TODO backlog: model money loops generically as { source_activity, items_acquired, items_sold, time_spent, profit } so the ledger absorbs new loops without rework; build the ledger loop-agnostic from the start. Scope guardrail recorded: economic loops (trading/mining/salvage/refining) are IN SCOPE; non-economic / different-tool-shaped loops (NPC hauling-contract missions, bounty/combat, medical/rescue) are explicitly OUT. Sequencing unchanged: trading + loop-agnostic ledger first, earn each subsequent loop by finishing the prior one. This nests under the confirmed solo/portfolio identity — the unified personal-economics ledger is the differentiated core, not a competitor reskin.
 - Confirmed project identity: SOLO build for the operator's own use + a public portfolio piece. NOT a business; monetization shelved (saturated market, RSI policy prohibits donations/paywalls, donation economics don't sustain even Regolith-tier tools — see competitive research artifact).
 - Two consequences locked: (1) UEX is the sole upstream by design, no third-party tool data dependencies (now explicit in CLAUDE.md UEX Hygiene Rules); (2) v1 backlog needs re-prioritization under the solo-user goal next session (TODO Chore added) — demote other-user features, keep correctness, likely pull cargo ledger forward.
 - Wear two hats deliberately: "personal edge" justifies selfish feature choices; "portfolio" justifies keeping the repo clean/legible to a stranger.
@@ -111,7 +114,7 @@ The recurring design throughline this session is HONESTY ABOUT UNCERTAINTY DELIV
 
 ## Pending verification count
 
-0 code verifications pending (no code shipped 2026-06-02 — docs only); 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). v1 item 5 SHIPPED + VERIFIED: buy/sell prices (price_origin/price_destination) added to CommodityRoute interface and rendered per row as "buy {price_origin}/SCU · sell {price_destination}/SCU"; card math verified in production (sell − buy = per-SCU; per-SCU × supply = headline profit; per-SCU × capacity = realizable).
+0 code verifications pending (no code shipped 2026-06-02 — two consecutive docs-only sessions); 1 calibration run OPEN / STANDING (travel-time constants — QT wall-clock leg still outstanding; auto-load fee and sale proceeds reconciliation moved to Completed in VERIFICATIONS.md); 1 parked (per-ship QT, open only if tool consistently misranks fast vs slow ships). v1 item 5 SHIPPED + VERIFIED: buy/sell prices (price_origin/price_destination) added to CommodityRoute interface and rendered per row as "buy {price_origin}/SCU · sell {price_destination}/SCU"; card math verified in production (sell − buy = per-SCU; per-SCU × supply = headline profit; per-SCU × capacity = realizable).
 
 ## Next likely step
 
