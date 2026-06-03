@@ -56,8 +56,8 @@ export default function Board({
                       <span className="text-xs text-warning">single route — unverified</span>
                     )}
                   </div>
-                  <span className="text-profit font-bold text-lg tabular-nums">
-                    +{primaryRealizable.toLocaleString()}
+                  <span className={`${primaryRealizable < 0 ? "text-loss" : "text-profit"} font-bold text-lg tabular-nums`}>
+                    {primaryRealizable >= 0 ? "+" : ""}{primaryRealizable.toLocaleString()}
                   </span>
                 </div>
 
@@ -77,7 +77,7 @@ export default function Board({
                         <div className="flex justify-between items-center gap-2">
                           <span className="text-sm text-text-muted">{routeLabel}</span>
                           {isExpanded && (
-                            <span className="text-profit font-semibold tabular-nums">+{realizable.toLocaleString()} realizable</span>
+                            <span className={`${realizable < 0 ? "text-loss" : "text-profit"} font-semibold tabular-nums`}>{realizable >= 0 ? "+" : ""}{realizable.toLocaleString()} realizable</span>
                           )}
                         </div>
                         <div className="text-xs text-text-muted tabular-nums">
