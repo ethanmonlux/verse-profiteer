@@ -10,6 +10,12 @@ Next.js / TypeScript / Tailwind on Vercel, UEX API 2.0.
 
 All UEX data access goes through a single module (`lib/uex.ts`) so the caching/fetch mechanism can be swapped later (e.g. Vercel fetch cache now, possible Railway + DB backend later) without touching route handlers. Route data is consumed from UEX's `commodities_routes` endpoint rather than computed locally; `lib/uex.ts` remains the sole UEX access point.
 
+Persistence (ratified, see DECISIONS.md D1): operator data — saved plans, flight history, derived stats — lives in Postgres. The UEX dataset is mirrored into Postgres by a scheduled job (Vercel Cron → Next route handler → Postgres) rather than fetched on user page-loads; user reads hit Postgres, only the background job touches UEX. The refresh job calls `lib/uex.ts` functions — it NEVER builds UEX URLs itself, so the single-access-point rule holds. Stack is all-TypeScript (no separate Python/FastAPI backend).
+
+## Spine Rule
+
+The Plan/Leg/Item type (see DECISIONS.md / TRANSFER.md) is a ratified architectural fixture: the shared spine for route-stacking, the cargo ledger, and the live re-router. The spine stores INPUTS and OBSERVATIONS only. Every profit, distance, and duration number is DERIVED ON READ, never persisted. Two sources of truth for one number is the exact "wrong number, lost trust" failure this rule prevents. The ledger stores actual prices/scu (observations, not derivable); profit from them is still computed, never stored. Loop-closure is derived, never a stored flag.
+
 ## UEX Hygiene Rules
 
 - UEX is the SOLE upstream data source, by design. verse-profiteer fetches directly from the UEX API (isolated in `lib/uex.ts`) and computes all route ranking, profit, travel-time, and confidence/staleness logic itself. Do NOT add dependencies on third-party Star Citizen tools (e.g. Schaulers, SC Trade Tools) as data sources. Rationale: (1) those tools are themselves UEX consumers — routing through them is strictly worse than fetching UEX directly (UEX → third party → us vs UEX → us); (2) they expose no public/stable API, so any integration would mean scraping undocumented endpoints with no recourse when they change; (3) the route ranking / profit / confidence calculations are the project's whole point and primary differentiation — offloading them to another tool's finished output defeats the purpose and would make this a reskin; (4) the single-isolated-upstream assumption is what the caching TTL matrix, staleness gating, and `lib/uex.ts` isolation rule are all built around. Reference implementations of others' logic (e.g. sc-cargo.space container-fit) may be consulted as REFERENCE only — reimplemented in our own code, never called as a service.
@@ -23,6 +29,12 @@ All UEX data access goes through a single module (`lib/uex.ts`) so the caching/f
 
 Solo workflow: CC writes to a session branch; operator opens a PR into `main`; CI (lint + typecheck + test) runs on the PR; operator merges when CI is green. `main` = production, auto-deploys on Vercel on push. No branch protection — the green/red CI status on the PR is the signal; operator enforces it by not merging red. No `develop` layer at this time.
 
+Branch-off-main must happen BEFORE a fresh-start prompt runs. CC builds on whatever branch is currently checked out — starting fresh work without first branching off main has caused unrelated changes to ride along on the wrong branch.
+
 ## Debug Surfaces
 
 Any debug surface exposing a raw data pull ships with both copy-to-clipboard and download-as-JSON from the start (copy for small pulls, download for large). Not added later.
+
+## Verification Discipline
+
+When a verify-first step cannot be completed (a needed live call fails, data is unavailable), report the step as BLOCKED and stop. Do NOT work around it by adding a debug endpoint or substituting an unverified assumption. A blocked verification is a surfaced state, not a problem to engineer around.
