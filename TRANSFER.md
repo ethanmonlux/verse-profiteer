@@ -2,6 +2,38 @@
 
 Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, TODO.md, VERIFICATIONS.md (Pending). Flag if this file is stale relative to those.
 
+## Session state (2026-06-04 — GATE CLEARED: probe + escalation trail + CLAUDE.md + TODO reshuffle)
+
+The 2026-06-03 NEXT SESSION GATE is fully cleared. All four steps done, committed, on main. Plus two side correctness fixes shipped. NO implementation yet — next session opens at SCHEMA DESIGN.
+
+### GATE — all four steps complete
+1. PROBE (done) — /api/probe-routes hit live UEX, captured findings, endpoint deleted same session. Findings:
+   - No-param commodities_routes returns HTTP 400 (missing_one_required_inputs). id_commodity REQUIRED — fan-out confirmed, no all-rows shortcut.
+   - NO date_modified on route rows. date_added (Unix ts) is row-creation, not freshness → blind ~30-min poll confirmed (refresh-on-change NOT possible).
+   - game_version_origin/destination ARE on route rows — patch-boundary staleness signal available for routes (previously only catalogued on rentals).
+   - One commodity (id 18) returned 352 routes in one call — fan-out is ~122 calls each returning all that commodity's routes; mirror row volume is tens of thousands.
+   - Typed-column list to EXPAND beyond original plan: scu_reachable, status_origin/destination, container_sizes_origin/destination, game_version_origin/destination (all on the route row).
+   - has_freight_elevator on the route row stays STRUCK as auto-load proxy; is_auto_load on /terminals is authoritative — auto-load filter still needs the terminals join.
+2. ESCALATION TRAIL (done) — created DECISIONS.md at repo root. D1 Postgres persistence, D2 mirror refresh cadence (caching-TTL-class), D3 full mirror replaces top-35 (ranking-math-class), routes-source fork (Option R), + probe findings section. Each marked RATIFIED, unbuilt.
+3. CLAUDE.md (done) — 4 edits: persistence paragraph in Architecture; new Spine Rule section; branch-off-main-before-fresh-start note in Branch Model; new Verification Discipline section (report-as-BLOCKED, don't work around with debug endpoints). Cache TTL line left unchanged on purpose (5-min routes describes current behavior; D2's 30-min is the mirror cadence, recorded in DECISIONS.md, not built yet).
+4. TODO reshuffle (done) — new RATIFIED ARCHITECTURE block at top of Major (mirror + spine + build order + still-undecided); ledger PROMOTED (D1 unblocks it); multi-leg loop PROMOTED (route-stacking = first spine consumer); capacity-aware ranking tagged PARTIALLY DISSOLVED BY MIRROR (sub-item 2 + shortlistCommodities bug + outlier-guard-v2 dissolve; container_sizes intersection + out-of-stock handling survive — reconcile at schema design, don't delete yet). v1 SCOPE block left intact.
+
+### SIDE FIXES SHIPPED THIS SESSION (display-only, REVIEW, on production)
+- Realizable-profit sign-aware rendering — Board.tsx headline + per-route realizable now use text-loss when <0, text-profit when >=0, and drop the hardcoded "+" (toLocaleString emits the minus). Fixed the "+-90,500 in green" bug. Confirmed on prod (Recycled Material Composite shows -180,500 in red). NOT escalation-gated, no math touched.
+- /api/probe-routes created then deleted same session. Debug surface count back to baseline four: verify, verify-prices, verify-qt, verify-terminals.
+
+### NEXT SESSION — START HERE: SCHEMA DESIGN (fresh chat)
+This is a meaty design beat; it was deliberately given a clean context window. Agenda:
+- Mirror schema finalized (routes_mirror typed columns per expanded probe list + JSONB raw + refreshed_at; terminals_mirror with is_auto_load; prices_mirror if/when shortlist logic is replaced). Indexes on (id_commodity) and (id_star_system_origin, id_star_system_destination).
+- Spine types (Plan/Leg/Item) — exact lib/ paths; async DB accessor from day one (near-locked).
+- DEEP capacity-ranking reconcile — confirm exactly what the mirror dissolves vs preserves (the TODO flag's split), THEN delete consciously.
+- Postgres host decision — Railway is the default (GOATS precedent) but not formally chosen.
+- RAILWAY PROVISIONING happens AFTER schema is designed+approved, as the first implementation step that needs it — NOT before (empty DB + likely re-provision otherwise).
+- Build order after schema: provision host -> migration -> mirror refresh job (Vercel Cron -> Next route -> lib/uex.ts -> upsert) -> spine types -> route-stacking consumer. Mirror/refresh/ranking all REVIEW+VERIFY, Pending VERIFICATIONS entries at merge.
+
+### OPEN ITEM RAISED THIS SESSION (not yet actioned)
+- DOC-TRAILER / STOP-HOOK CONFLICT: the repo's stop hook auto-commits+pushes on task completion, which collides with the doc trailer's "Do not run any commands" (commit/push are commands). CC correctly stopped and asked each doc prompt; operator answered "commit & push" each time. FIX OPTIONS (own beat, escalation-class since it's the trailer definition in project instructions): reword the doc trailer to "Do not run lint, typecheck, or build; allow the commit/push stop hook to run," OR accept the per-prompt question. Recommend rewording. Not done this session.
+
 ## Session state (2026-06-02 — capacity-ranking-auto-load)
 
 ### SHIPPED + VERIFIED THIS SESSION (all merged to main, on production)

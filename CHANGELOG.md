@@ -23,6 +23,7 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 
 ### Changed
 
+- Realizable-profit values are now sign-aware in the route board. The card headline and the per-route realizable line use the loss token (text-loss) when the value is negative and the profit token (text-profit) when it is zero or positive, and no longer prepend a hardcoded "+" (toLocaleString already emits the minus sign). Fixes negative routes rendering as "+-90,500" in profit-green; a loss now reads as a red negative. Display-only, no ranking or math change. Verified on production.
 - Replaced the local route planner with UEX commodities_routes integration. New `lib/routes.ts` (`shortlistCommodities` + `getTopRoutes`) selects top-margin commodity candidates from the cached prices feed, fetches real UEX routes for those candidates, and ranks by realizable profit.
 - Routes board now renders one card per commodity (top 3 routes each, origin → destination + profit), sorted by best-route profit, showing the top 10 commodities.
 - Card information hierarchy redesign (display-only, verified in production). Card headline now shows the primary route's realizable profit (capacity-aware), not total. Per-route green realizable profit shows only when a card is expanded (fixed prior double-count on collapsed cards). Per-row qualifier shows "pick up {haulable} SCU · {supply} available" when capacity is set, "at {bottleneck} SCU max supply" when unset. Total profit demoted behind expand; per-SCU on secondary line.
