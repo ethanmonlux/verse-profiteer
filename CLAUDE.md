@@ -12,6 +12,13 @@ All UEX data access goes through a single module (`lib/uex.ts`) so the caching/f
 
 Persistence (ratified, see DECISIONS.md D1): operator data — saved plans, flight history, derived stats — lives in Postgres. The UEX dataset is mirrored into Postgres by a scheduled job (Vercel Cron → Next route handler → Postgres) rather than fetched on user page-loads; user reads hit Postgres, only the background job touches UEX. The refresh job calls `lib/uex.ts` functions — it NEVER builds UEX URLs itself, so the single-access-point rule holds. Stack is all-TypeScript (no separate Python/FastAPI backend).
 
+## Mirror Refresh
+
+- The UEX mirror is populated by `scripts/refresh-mirror.ts`, run as a scheduled Railway service (every 30 min), NOT by Vercel cron (Hobby limits make Vercel cron unsuitable — see TRANSFER/DECISIONS).
+- The worker uses the INTERNAL Railway `DATABASE_URL` (it runs inside Railway's network); Vercel and local use the PUBLIC url.
+- Refresh cadence (30 min) and the paced fan-out rate (10/6s) are caching/rate-limit decisions — changing either is escalation-gated.
+- Mirror writes go only through `lib/mirror.ts`; the worker is the only caller that writes to the mirror.
+
 ## Spine Rule
 
 The Plan/Leg/Item type (see DECISIONS.md / TRANSFER.md) is a ratified architectural fixture: the shared spine for route-stacking, the cargo ledger, and the live re-router. The spine stores INPUTS and OBSERVATIONS only. Every profit, distance, and duration number is DERIVED ON READ, never persisted. Two sources of truth for one number is the exact "wrong number, lost trust" failure this rule prevents. The ledger stores actual prices/scu (observations, not derivable); profit from them is still computed, never stored. Loop-closure is derived, never a stored flag.

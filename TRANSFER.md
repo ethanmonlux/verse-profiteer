@@ -2,6 +2,15 @@
 
 Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, TODO.md, VERIFICATIONS.md (Pending). Flag if this file is stale relative to those.
 
+## Session state (2026-06-04 — MIRROR PERSISTENCE + REFRESH WORKER SHIPPED)
+
+- Persistence layer shipped: Drizzle + Railway Postgres, routes_mirror + terminals_mirror migrated and live.
+- Mirror-write lib shipped: lib/db/index.ts (shared pg Pool + typed drizzle db), lib/mirror.ts (parseContainerSizes, pacedFanOut, upsertTerminals, upsertRoutes). Unit test on parseContainerSizes green.
+- Refresh worker shipped: scripts/refresh-mirror.ts, run via npm run refresh:mirror, scheduled on Railway every 30 min using the INTERNAL DATABASE_URL. Paced fan-out (10 commodities / 6s) to respect the shared UEX 120/min cap.
+- Architecture note: refresh runs as a Railway cron service, NOT a Vercel route — Hobby plan caps cron at once-daily and functions at 60s, both of which a ~90s 30-min refresh violates. Railway worker is colocated with the DB, free, unconstrained.
+- Open: VF mirror-refresh-worker is Pending (see VERIFICATIONS.md) — worker must be run and verified before this beat is Done. Railway worker SERVICE still to be set up in the Railway dashboard (build/start config not committed to repo).
+- Next session: after worker verified, the consumer swap — point route ranking at the mirror instead of live per-commodity fan-out (this is where D3 / shortlist dissolution actually lands in the read path).
+
 ## Session state (2026-06-04 — GATE CLEARED: probe + escalation trail + CLAUDE.md + TODO reshuffle)
 
 The 2026-06-03 NEXT SESSION GATE is fully cleared. All four steps done, committed, on main. Plus two side correctness fixes shipped. NO implementation yet — next session opens at SCHEMA DESIGN.
