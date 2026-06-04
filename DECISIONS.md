@@ -42,3 +42,6 @@ Record of what the live commodities_routes probe returned, to inform D2/D3 build
 ---
 
 See TRANSFER.md for the full design narrative and the Spine Rule (Plan/Leg/Item type). The Spine Rule and persistence deploy-model change are folded into CLAUDE.md separately (next doc beat).
+
+## Open item — doc-trailer / stop-hook conflict (2026-06-04, unresolved)
+The repo's stop hook auto-commits and pushes on task completion. This collides with the doc-only prompt trailer "Do not run any commands," because commit and push are commands. CC correctly halts and asks rather than overriding the instruction. Resolution options (own beat, escalation-class — the trailer is defined in project instructions): (a) reword the doc trailer to "Do not run lint, typecheck, or build; allow the commit/push stop hook to run"; (b) accept the per-prompt commit question. Recommendation: (a). Not yet actioned.
