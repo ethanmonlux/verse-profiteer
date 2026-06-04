@@ -25,6 +25,20 @@ Ranking and filtering run against the WHOLE mirrored routes dataset, not a top-3
 
 CONSEQUENCE: because nothing computed is stored (see Spine Rule), ranking computes realizable profit across the full mirror at request time, every request. Cheap today (top-35, in-memory); heavier against the full dataset. Handled via indexed columns on ranking INPUTS in the mirror schema. The ranking path is now the performance-sensitive surface.
 
+## D4 — Persistence layer: Drizzle ORM + Railway Postgres
+**Decided:** 2026-06-04. **Class:** persistence / architecture. **Status:** RATIFIED, unbuilt.
+
+- **ORM:** Drizzle, chosen for schema-as-TypeScript as a single source of truth for both migrations and the future typed query accessor (avoids SQL/types drift).
+- **Driver:** node-postgres (pg) with a shared Pool, selected over postgres-js for better-documented Vercel serverless pooling and parity with prior GOATS pg.Pool usage.
+- **Migration workflow:** generate + migrate (drizzle-kit). Never push — push is dev-only and this DB holds real data.
+- **Schema location:** lib/db/schema.ts. Generated SQL: ./drizzle (committed, never hand-edited).
+- **Mirror tables** (routes_mirror, terminals_mirror) are GLOBAL — no tenant_id. One UEX truth shared across all users. tenant_id belongs on the spine (operator data) only.
+- **Hybrid table shape:** typed/indexed columns on ranking/filter/join inputs + raw jsonb (verbatim UEX row, source of truth) + refreshed_at.
+- **container_sizes** stored as integer[], normalized from the UEX comma-string at refresh-write time (raw jsonb retains the original); normalization includes a defensive fallback to NULL on any unexpected token, never a silent drop or crash.
+- **prices_mirror deferred:** D3 dissolves the margin shortlist that commodities_prices_all fed, leaving no consumer. Future price overrides are operator observations and belong on the spine, not this mirror.
+- **DB client/pool module** deliberately not built in this beat — it lands with its first caller (the refresh job).
+- **Connection:** Railway PUBLIC url (autorack.proxy.rlwy.net:PORT) is required for both local .env and Vercel, because both run outside Railway's network. The .railway.internal host does NOT resolve from Vercel or local and is unused by this project.
+
 ## Routes-source fork — resolved (supports D2/D3)
 **Decided:** 2026-06-03. **Status:** RATIFIED.
 

@@ -25,6 +25,14 @@ The Plan/Leg/Item type (see DECISIONS.md / TRANSFER.md) is a ratified architectu
 - Default to `_all` bulk endpoints; no per-terminal loops.
 - Cache TTLs: 5 min prices, 5 min routes, 1 hr terminals/purchases, 12 h distances/rentals, 1 day defs.
 
+## Persistence / Migrations
+
+- DB schema is defined in TypeScript at `lib/db/schema.ts`.
+- Schema changes flow: edit `lib/db/schema.ts` → `npm run db:generate` (writes SQL to `./drizzle`) → `npm run db:migrate` (applies to DB). Never `drizzle-kit push`.
+- CC never hand-edits files in `./drizzle` (generated SQL) and never runs `db:migrate` (operator applies migrations against the live DB by hand).
+- `DATABASE_URL` uses the Railway PUBLIC connection string in all environments (local `.env`, Vercel Production + Preview, Sensitive). Never the `.railway.internal` host.
+- Mirror tables are global UEX cache; `tenant_id` is spine-only.
+
 ## Branch Model
 
 Solo workflow: CC writes to a session branch; operator opens a PR into `main`; CI (lint + typecheck + test) runs on the PR; operator merges when CI is green. `main` = production, auto-deploys on Vercel on push. No branch protection — the green/red CI status on the PR is the signal; operator enforces it by not merging red. No `develop` layer at this time.
