@@ -1,0 +1,286 @@
+{
+  "id": "5ad12546-e0f2-461e-863f-81436ad31abb",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.routes_mirror": {
+      "name": "routes_mirror",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_commodity": {
+          "name": "id_commodity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_terminal_origin": {
+          "name": "id_terminal_origin",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_terminal_destination": {
+          "name": "id_terminal_destination",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_star_system_origin": {
+          "name": "id_star_system_origin",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_star_system_destination": {
+          "name": "id_star_system_destination",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_origin": {
+          "name": "price_origin",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_destination": {
+          "name": "price_destination",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profit": {
+          "name": "profit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "investment": {
+          "name": "investment",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "distance": {
+          "name": "distance",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu_origin": {
+          "name": "scu_origin",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu_destination": {
+          "name": "scu_destination",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu_reachable": {
+          "name": "scu_reachable",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status_origin": {
+          "name": "status_origin",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status_destination": {
+          "name": "status_destination",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "container_sizes_origin": {
+          "name": "container_sizes_origin",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "container_sizes_destination": {
+          "name": "container_sizes_destination",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_version_origin": {
+          "name": "game_version_origin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_version_destination": {
+          "name": "game_version_destination",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "refreshed_at": {
+          "name": "refreshed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "routes_mirror_id_commodity_idx": {
+          "name": "routes_mirror_id_commodity_idx",
+          "columns": [
+            {
+              "expression": "id_commodity",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "routes_mirror_star_systems_idx": {
+          "name": "routes_mirror_star_systems_idx",
+          "columns": [
+            {
+              "expression": "id_star_system_origin",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id_star_system_destination",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.terminals_mirror": {
+      "name": "terminals_mirror",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "is_auto_load": {
+          "name": "is_auto_load",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "star_system_name": {
+          "name": "star_system_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "planet_name": {
+          "name": "planet_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "moon_name": {
+          "name": "moon_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outpost_name": {
+          "name": "outpost_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_cargo_center": {
+          "name": "is_cargo_center",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_freight_elevator": {
+          "name": "has_freight_elevator",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_loading_dock": {
+          "name": "has_loading_dock",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_docking_port": {
+          "name": "has_docking_port",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "refreshed_at": {
+          "name": "refreshed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
