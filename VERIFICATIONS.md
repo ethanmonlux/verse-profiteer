@@ -11,7 +11,16 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-(none)
+VF — Mirror refresh worker (Railway)  [Pending]
+- What: First population of routes_mirror and terminals_mirror via the scheduled Railway worker (scripts/refresh-mirror.ts).
+- How to verify (must run before marking Complete):
+  1. Trigger the worker once on Railway (or locally via npm run refresh:mirror with DATABASE_URL set).
+  2. Confirm terminals_mirror row count is non-zero and plausible (~hundreds).
+  3. Confirm routes_mirror row count is non-zero and in the expected order of magnitude for all commodities (not just a 35-row shortlist).
+  4. Run the worker a SECOND time; confirm refreshed_at advances on existing rows (proves onConflictDoUpdate updates, not just inserts) and row counts stay stable (proves upsert, not duplicate insert).
+  5. Spot-check ONE route row against a live UEX commodities_routes query for that id_commodity: profit, scu_reachable, and price fields match.
+  6. Spot-check that container_sizes_origin/destination are populated as int arrays for at least one row, and scan the worker logs for any parseContainerSizes null-fallback warnings — note how many fired and whether the feed format held.
+- Why Pending: worker not yet run against live DB at doc time.
 
 ## Pending — Calibration Runs
 
