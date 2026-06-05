@@ -98,30 +98,34 @@ export async function upsertTerminals(terminals: Terminal[]): Promise<number> {
     refreshedAt: now,
   }));
 
-  await db
-    .insert(terminalsMirror)
-    .values(rows)
-    .onConflictDoUpdate({
-      target: terminalsMirror.id,
-      set: {
-        isAutoLoad: sql`excluded.is_auto_load`,
-        starSystemName: sql`excluded.star_system_name`,
-        planetName: sql`excluded.planet_name`,
-        moonName: sql`excluded.moon_name`,
-        outpostName: sql`excluded.outpost_name`,
-        isCargoCenter: sql`excluded.is_cargo_center`,
-        hasFreightElevator: sql`excluded.has_freight_elevator`,
-        hasLoadingDock: sql`excluded.has_loading_dock`,
-        hasDockingPort: sql`excluded.has_docking_port`,
-        raw: sql`excluded.raw`,
-        refreshedAt: sql`excluded.refreshed_at`,
-      },
-    });
+  for (let i = 0; i < rows.length; i += TERMINAL_INSERT_CHUNK) {
+    const chunk = rows.slice(i, i + TERMINAL_INSERT_CHUNK);
+    await db
+      .insert(terminalsMirror)
+      .values(chunk)
+      .onConflictDoUpdate({
+        target: terminalsMirror.id,
+        set: {
+          isAutoLoad: sql`excluded.is_auto_load`,
+          starSystemName: sql`excluded.star_system_name`,
+          planetName: sql`excluded.planet_name`,
+          moonName: sql`excluded.moon_name`,
+          outpostName: sql`excluded.outpost_name`,
+          isCargoCenter: sql`excluded.is_cargo_center`,
+          hasFreightElevator: sql`excluded.has_freight_elevator`,
+          hasLoadingDock: sql`excluded.has_loading_dock`,
+          hasDockingPort: sql`excluded.has_docking_port`,
+          raw: sql`excluded.raw`,
+          refreshedAt: sql`excluded.refreshed_at`,
+        },
+      });
+  }
 
   return rows.length;
 }
 
 const ROUTE_INSERT_CHUNK = 100;
+const TERMINAL_INSERT_CHUNK = 100;
 
 /**
  * Mirror UEX commodity routes into routes_mirror. numeric columns expect string
