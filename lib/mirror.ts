@@ -121,7 +121,7 @@ export async function upsertTerminals(terminals: Terminal[]): Promise<number> {
   return rows.length;
 }
 
-const ROUTE_INSERT_CHUNK = 500;
+const ROUTE_INSERT_CHUNK = 100;
 
 /**
  * Mirror UEX commodity routes into routes_mirror. numeric columns expect string
