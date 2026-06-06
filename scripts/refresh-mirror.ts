@@ -1,5 +1,6 @@
-import { pool } from "@/lib/db";
+import { db, pool } from "@/lib/db";
 import { pacedFanOut, upsertRoutes, upsertTerminals } from "@/lib/mirror";
+import { sql } from "drizzle-orm";
 import {
   getCommodityPricesAll,
   getCommodityRoutes,
@@ -10,6 +11,16 @@ import type { CommodityRoute } from "@/lib/uex";
 async function main(): Promise<void> {
   const startedAt = Date.now();
   console.log(`[refresh-mirror] start ${new Date(startedAt).toISOString()}`);
+
+  console.log("[refresh-mirror] probe: testing db connection...");
+  const probeStart = Date.now();
+  try {
+    await db.execute(sql`select 1`);
+    console.log(`[refresh-mirror] probe: db connection OK (${Date.now() - probeStart}ms)`);
+  } catch (err) {
+    console.error(`[refresh-mirror] probe: db connection FAILED after ${Date.now() - probeStart}ms`, err);
+    throw err;
+  }
 
   // Terminals first: cheap, a single bulk call.
   const terminals = await getTerminals();
