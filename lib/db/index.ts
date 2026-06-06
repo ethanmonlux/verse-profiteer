@@ -13,6 +13,9 @@ if (!connectionString) {
 
 // Single shared pool for the whole process. The worker is responsible for
 // calling pool.end() on exit so the process can shut down cleanly.
-export const pool = new Pool({ connectionString });
+export const pool = new Pool({
+  connectionString,
+  ssl: { rejectUnauthorized: false },
+});
 
 export const db = drizzle(pool, { schema });
