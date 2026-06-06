@@ -2,6 +2,12 @@
 
 Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, TODO.md, VERIFICATIONS.md (Pending). Flag if this file is stale relative to those.
 
+## Session state (2026-06-06 — MIRROR REFRESH WORKER VERIFIED, BEAT CLOSED)
+
+- DONE: mirror persistence + refresh worker fully shipped and verified. routes_mirror (~8930 rows) and terminals_mirror (823 rows) populating every 30 min on Railway cron. VF entry moved to Completed (VERIFICATIONS.md); connection/runtime decisions recorded as D5 (DECISIONS.md).
+- Cleanup pending (minor): worker has a redundant DATABASE_PUBLIC_URL variable; only DATABASE_URL is read by code — safe to delete the duplicate.
+- NEXT SESSION (the big one): wire the READ path. Point route ranking at routes_mirror instead of the live per-commodity UEX fan-out in lib/routes.ts. This is where D3 lands — removing the top-35 shortlist trim so capacity-aware ranking sees every candidate. Ranking-math + caching class: REVIEW + VERIFY, escalation-gated, with before/after verification that a known ship's best route is same-or-better, not worse.
+
 ## Session state (2026-06-04 — MIRROR PERSISTENCE + REFRESH WORKER SHIPPED)
 
 - Persistence layer shipped: Drizzle + Railway Postgres, routes_mirror + terminals_mirror migrated and live.

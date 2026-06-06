@@ -39,6 +39,15 @@ CONSEQUENCE: because nothing computed is stored (see Spine Rule), ranking comput
 - **DB client/pool module** deliberately not built in this beat — it lands with its first caller (the refresh job).
 - **Connection:** Railway PUBLIC url (autorack.proxy.rlwy.net:PORT) is required for both local .env and Vercel, because both run outside Railway's network. The .railway.internal host does NOT resolve from Vercel or local and is unused by this project.
 
+## D5 — Mirror worker runtime & Railway Postgres connection
+**Decided:** 2026-06-06. **Class:** persistence / caching-infra. **Status:** RATIFIED, shipped + verified.
+
+- Refresh worker runs as a Railway cron service (every 30 min), separate from the Vercel app. Vercel Hobby cron (once-daily) and 60s function limit make Vercel unsuitable for the ~100-130s paced fan-out.
+- Connection: worker uses the Railway PUBLIC proxy URL with pg Pool ssl: { rejectUnauthorized: false }. Internal networking (postgres.railway.internal) produced ETIMEDOUT; the public proxy requires SSL or resets the connection (ECONNRESET at ~7s).
+- A startup `select 1` probe is kept in the worker permanently — it isolates infrastructure failures from application/insert failures.
+- Inserts are chunked at 100 rows/statement (terminals and routes both) to keep statement size bounded.
+- Operational note: the original Postgres instance wedged into an "online but refuses all connections" state (Railway's own dashboard also could not connect; restart/redeploy did not recover it). Resolution was to delete and recreate the Postgres service — mirror data is regenerable cache, so zero data loss. If the same symptoms recur (probe ECONNRESET ~7s, dashboard "connection terminated unexpectedly"), suspect the DB instance, not the code; recreate rather than chasing code fixes.
+
 ## Routes-source fork — resolved (supports D2/D3)
 **Decided:** 2026-06-03. **Status:** RATIFIED.
 

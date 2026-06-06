@@ -15,9 +15,11 @@ Persistence (ratified, see DECISIONS.md D1): operator data — saved plans, flig
 ## Mirror Refresh
 
 - The UEX mirror is populated by `scripts/refresh-mirror.ts`, run as a scheduled Railway service (every 30 min), NOT by Vercel cron (Hobby limits make Vercel cron unsuitable — see TRANSFER/DECISIONS).
-- The worker uses the INTERNAL Railway `DATABASE_URL` (it runs inside Railway's network); Vercel and local use the PUBLIC url.
 - Refresh cadence (30 min) and the paced fan-out rate (10/6s) are caching/rate-limit decisions — changing either is escalation-gated.
 - Mirror writes go only through `lib/mirror.ts`; the worker is the only caller that writes to the mirror.
+- The mirror refresh worker connects via the Railway PUBLIC `DATABASE_URL` with Pool SSL (`rejectUnauthorized: false`). Do not switch the worker to the internal host without re-testing — internal networking has failed with ETIMEDOUT (see DECISIONS.md D5).
+- Inserts are chunked (100/statement). The worker keeps a `select 1` startup probe to distinguish infra failures from code failures.
+- Mirror tables hold regenerable UEX cache; the Postgres instance can be deleted/recreated with zero data loss (re-run `db:migrate`, repoint worker `DATABASE_URL`).
 
 ## Spine Rule
 
