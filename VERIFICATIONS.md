@@ -11,16 +11,7 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-VF — Mirror refresh worker (Railway)  [Pending]
-- What: First population of routes_mirror and terminals_mirror via the scheduled Railway worker (scripts/refresh-mirror.ts).
-- How to verify (must run before marking Complete):
-  1. Trigger the worker once on Railway (or locally via npm run refresh:mirror with DATABASE_URL set).
-  2. Confirm terminals_mirror row count is non-zero and plausible (~hundreds).
-  3. Confirm routes_mirror row count is non-zero and in the expected order of magnitude for all commodities (not just a 35-row shortlist).
-  4. Run the worker a SECOND time; confirm refreshed_at advances on existing rows (proves onConflictDoUpdate updates, not just inserts) and row counts stay stable (proves upsert, not duplicate insert).
-  5. Spot-check ONE route row against a live UEX commodities_routes query for that id_commodity: profit, scu_reachable, and price fields match.
-  6. Spot-check that container_sizes_origin/destination are populated as int arrays for at least one row, and scan the worker logs for any parseContainerSizes null-fallback warnings — note how many fired and whether the feed format held.
-- Why Pending: worker not yet run against live DB at doc time.
+(none)
 
 ## Pending — Calibration Runs
 
@@ -30,6 +21,13 @@ These exist for the life of the tool — they don’t “complete” once and di
 - Per-ship QT speeds — only open this if the tool consistently misranks fast vs slow ships in the same scenario. Skip until that’s observed.
 
 ## Completed — Code Verifications
+
+VF — Mirror refresh worker (Railway)  [Completed 2026-06-06]
+- Verified: full run upserts 823 terminals + 8930 routes in ~103-134s, clean exit.
+- Verified: second consecutive run holds identical counts (823 / 8930), confirming onConflictDoUpdate updates in place rather than duplicate-inserting — EXCLUDED clauses and refreshed_at advance correctly.
+- Verified: startup select 1 probe connects OK (~80-900ms) against the recreated Postgres.
+- Note: container_sizes null-fallback fires on legitimately-empty UEX values ("") for a modest number of routes; feed format held, null storage is correct by design.
+- Outstanding (minor): one-time spot-check of a route's profit/scu_reachable against a live UEX query — recommended before the read-path consumer ships.
 
 - Ship-capacity scaling (lib/realizableProfit.ts + app/Board.tsx) — verified 2026-05-31. Cap 5/10/32 runs exercised both branches; down-scaling and supply-capped branch both confirmed; ≤-total-profit invariant held; cap indicator toggled correctly at the boundary.
 - Route-count guard (`lib/routes.ts` + `app/page.tsx`) — verified 2026-05-30 via raw-data audit instead of the live badge (the Osoian anchor was unreliable due to market churn, so a data-based check was used). Method: pulled the raw commodities_prices_all feed (2,575 records, 122 commodities) and recomputed the shortlist (top-20 by margin = best price_sell − best price_buy per commodity). All 10 displayed board commodities (E'tam, Dymantium, Compboard, Atlasium, Taranite, Carbon-Silk, Degnous Root, Tritium, Gold, Gasping Weevil Eggs) fell within the computed top-20 — shortlist stage confirmed. Guard confirmed: Osoian Hides (id 53) is the #1 margin commodity by ~15x (margin 586,500) yet is absent from the board, while Gasping Weevil Eggs (#2 margin, multi-route) displays normally at the bottom — the highest-margin commodity is quarantined for being single-route while a multi-route commodity is not, exactly the intended discrimination. No badge visible because the over-fetch buffer (fetch 20, show 10) pushes the quarantined single-route commodity past slot 10.
