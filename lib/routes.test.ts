@@ -4,8 +4,11 @@ import type { CommodityPriceRecord, CommodityRoute } from "@/lib/uex";
 
 vi.mock("@/lib/uex", () => ({
   getCommodityPricesAll: vi.fn(),
-  getCommodityRoutes: vi.fn(),
   getTerminals: vi.fn(),
+}));
+
+vi.mock("@/lib/routesRepo", () => ({
+  getAllMirroredRoutes: vi.fn(),
 }));
 
 function rec(
@@ -146,10 +149,11 @@ describe("shortlistCommodities", () => {
 // getTopRoutes — mocked UEX layer
 // ---------------------------------------------------------------------------
 
-import { getCommodityPricesAll, getCommodityRoutes, getTerminals } from "@/lib/uex";
+import { getCommodityPricesAll, getTerminals } from "@/lib/uex";
+import { getAllMirroredRoutes } from "@/lib/routesRepo";
 
 const mockGetPrices = getCommodityPricesAll as ReturnType<typeof vi.fn>;
-const mockGetRoutes = getCommodityRoutes as ReturnType<typeof vi.fn>;
+const mockGetAllRoutes = getAllMirroredRoutes as ReturnType<typeof vi.fn>;
 const mockGetTerminals = getTerminals as ReturnType<typeof vi.fn>;
 
 function priceRec(
@@ -237,9 +241,7 @@ describe("getTopRoutes", () => {
 
   it("returns one group per commodity with no duplicates", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(id === 1 ? [route(101, 1, 500)] : [route(201, 2, 300)])
-    );
+    mockGetAllRoutes.mockResolvedValue([route(101, 1, 500), route(201, 2, 300)]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const ids = groups.map((g) => g.id_commodity);
@@ -251,13 +253,13 @@ describe("getTopRoutes", () => {
   it("sorts each group's routes by profit descending and caps at 3", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
     // Commodity 1 gets 4 routes in arbitrary order; expect top-3 sorted desc.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1
-          ? [route(101, 1, 200), route(102, 1, 500), route(103, 1, 100), route(104, 1, 400)]
-          : [route(201, 2, 50)]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([
+      route(101, 1, 200),
+      route(102, 1, 500),
+      route(103, 1, 100),
+      route(104, 1, 400),
+      route(201, 2, 50),
+    ]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
@@ -270,11 +272,7 @@ describe("getTopRoutes", () => {
   it("sorts groups by best route profit descending", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
     // Commodity 2 has a better best route than commodity 1.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1 ? [route(101, 1, 300)] : [route(201, 2, 700)]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([route(101, 1, 300), route(201, 2, 700)]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     expect(groups[0].id_commodity).toBe(2);
@@ -289,9 +287,11 @@ describe("getTopRoutes", () => {
       manyPrices.push(priceRec(i, `Commodity ${i}`, 0, 200));
     }
     mockGetPrices.mockResolvedValue(manyPrices);
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve([route(id * 100, id, id * 10)])
-    );
+    const manyRoutes: CommodityRoute[] = [];
+    for (let i = 1; i <= 12; i++) {
+      manyRoutes.push(route(i * 100, i, i * 10));
+    }
+    mockGetAllRoutes.mockResolvedValue(manyRoutes);
 
     const groups = await getTopRoutes(OPTS_ALL);
     expect(groups.length).toBeLessThanOrEqual(10);
@@ -299,9 +299,7 @@ describe("getTopRoutes", () => {
 
   it("populates commodityName from prices feed", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve([route(id * 100, id, 100)])
-    );
+    mockGetAllRoutes.mockResolvedValue([route(100, 1, 100), route(200, 2, 100)]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
@@ -317,7 +315,7 @@ describe("getTopRoutes", () => {
       priceRec(3, "", 0, 250),
     ];
     mockGetPrices.mockResolvedValue(prices);
-    mockGetRoutes.mockResolvedValue([route(301, 3, 100)]);
+    mockGetAllRoutes.mockResolvedValue([route(301, 3, 100)]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     expect(groups[0].commodityName).toBe("Commodity 3");
@@ -325,10 +323,8 @@ describe("getTopRoutes", () => {
 
   it("produces no group for a commodity whose routes array is empty", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
-    // Commodity 1 returns routes; commodity 2 returns none.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(id === 1 ? [route(101, 1, 500)] : [])
-    );
+    // Commodity 1 has a route in the mirror; commodity 2 has none.
+    mockGetAllRoutes.mockResolvedValue([route(101, 1, 500)]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const ids = groups.map((g) => g.id_commodity);
@@ -343,13 +339,11 @@ describe("getTopRoutes", () => {
   it("marks a commodity with exactly 1 route as quarantined", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
     // Commodity 1: single route → quarantined. Commodity 2: two routes → healthy.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1
-          ? [route(101, 1, 500)]
-          : [route(201, 2, 300), route(202, 2, 200)]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([
+      route(101, 1, 500),
+      route(201, 2, 300),
+      route(202, 2, 200),
+    ]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
@@ -359,13 +353,11 @@ describe("getTopRoutes", () => {
   it("marks a commodity with 2 or more routes as not quarantined", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
     // Commodity 1: two routes → healthy. Commodity 2: single route → quarantined.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1
-          ? [route(101, 1, 500), route(102, 1, 300)]
-          : [route(201, 2, 200)]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([
+      route(101, 1, 500),
+      route(102, 1, 300),
+      route(201, 2, 200),
+    ]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const g1 = groups.find((g) => g.id_commodity === 1)!;
@@ -384,11 +376,14 @@ describe("getTopRoutes", () => {
       priceRec(3, "Laranite", 0, 300),
     ];
     mockGetPrices.mockResolvedValue(prices);
-    mockGetRoutes.mockImplementation((id: number) => {
-      if (id === 1) return Promise.resolve([route(101, 1, 9999)]);
-      if (id === 2) return Promise.resolve([route(201, 2, 500), route(202, 2, 400)]);
-      return Promise.resolve([route(301, 3, 300), route(302, 3, 200), route(303, 3, 100)]);
-    });
+    mockGetAllRoutes.mockResolvedValue([
+      route(101, 1, 9999),
+      route(201, 2, 500),
+      route(202, 2, 400),
+      route(301, 3, 300),
+      route(302, 3, 200),
+      route(303, 3, 100),
+    ]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const quarantinedIdx = groups.findIndex((g) => g.id_commodity === 1);
@@ -412,11 +407,13 @@ describe("getTopRoutes", () => {
       priceRec(3, "Gold", 0, 200),
     ];
     mockGetPrices.mockResolvedValue(prices);
-    mockGetRoutes.mockImplementation((id: number) => {
-      if (id === 1) return Promise.resolve([route(101, 1, 700), route(102, 1, 600)]);
-      if (id === 2) return Promise.resolve([route(201, 2, 400), route(202, 2, 300)]);
-      return Promise.resolve([route(301, 3, 900)]);
-    });
+    mockGetAllRoutes.mockResolvedValue([
+      route(101, 1, 700),
+      route(102, 1, 600),
+      route(201, 2, 400),
+      route(202, 2, 300),
+      route(301, 3, 900),
+    ]);
 
     const groups = await getTopRoutes(OPTS_ALL);
     const healthy = groups.filter((g) => !g.quarantined);
@@ -431,13 +428,10 @@ describe("getTopRoutes", () => {
   it("produces no group for a commodity with only non-runnable routes (origin system excluded)", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
     // Commodity 1's route has origin in "Fringe" which is not in allowedSystems.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1
-          ? [{ ...route(101, 1, 500), origin_star_system_name: "Fringe" }]
-          : [route(201, 2, 300)]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([
+      { ...route(101, 1, 500), origin_star_system_name: "Fringe" },
+      route(201, 2, 300),
+    ]);
     const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 100000 });
     expect(groups.map((g) => g.id_commodity)).not.toContain(1);
     expect(groups.map((g) => g.id_commodity)).toContain(2);
@@ -446,16 +440,11 @@ describe("getTopRoutes", () => {
   it("excludes a cross-system route but keeps the all-Stanton route for the same commodity", async () => {
     mockGetPrices.mockResolvedValue(basePrices);
     // Commodity 1: Stanton→Stanton (kept) + Stanton→Pyro (excluded under Stanton-only).
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1
-          ? [
-              route(101, 1, 500),
-              { ...route(102, 1, 600), destination_star_system_name: "Pyro" },
-            ]
-          : [route(201, 2, 300)]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([
+      route(101, 1, 500),
+      { ...route(102, 1, 600), destination_star_system_name: "Pyro" },
+      route(201, 2, 300),
+    ]);
     const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 100000 });
     const g1 = groups.find((g) => g.id_commodity === 1)!;
     expect(g1).toBeDefined();
@@ -468,13 +457,10 @@ describe("getTopRoutes", () => {
     // Commodity 1: profit=1000, scu=200 → profitPerScu=5, realizableProfit(50)=round(5×50)=250
     // Commodity 2: profit=500,  scu=50  → profitPerScu=10, realizableProfit(50)=round(10×50)=500
     // Raw-profit order: 1>2. Realizable order at shipCapacity=50: 2>1.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1
-          ? [{ ...route(101, 1, 1000), scu_origin: 200, scu_destination: 200 }]
-          : [{ ...route(201, 2, 500), scu_origin: 50, scu_destination: 50 }]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([
+      { ...route(101, 1, 1000), scu_origin: 200, scu_destination: 200 },
+      { ...route(201, 2, 500), scu_origin: 50, scu_destination: 50 },
+    ]);
     const groups = await getTopRoutes({ allowedSystems: ["Stanton", "Pyro", "Nyx"], shipCapacity: 50 });
     expect(groups[0].id_commodity).toBe(2);
     expect(groups[1].id_commodity).toBe(1);
@@ -484,18 +470,46 @@ describe("getTopRoutes", () => {
     mockGetPrices.mockResolvedValue(basePrices);
     // Commodity 1: 2 routes total; second has destination "Pyro" (excluded under Stanton-only).
     // Only 1 runnable → quarantined even though total route count is 2.
-    mockGetRoutes.mockImplementation((id: number) =>
-      Promise.resolve(
-        id === 1
-          ? [
-              route(101, 1, 500),
-              { ...route(102, 1, 400), destination_star_system_name: "Pyro" },
-            ]
-          : [route(201, 2, 300), route(202, 2, 200)]
-      )
-    );
+    mockGetAllRoutes.mockResolvedValue([
+      route(101, 1, 500),
+      { ...route(102, 1, 400), destination_star_system_name: "Pyro" },
+      route(201, 2, 300),
+      route(202, 2, 200),
+    ]);
     const groups = await getTopRoutes({ allowedSystems: ["Stanton"], shipCapacity: 100000 });
     const g1 = groups.find((g) => g.id_commodity === 1)!;
     expect(g1.quarantined).toBe(true);
+  });
+
+  // ---------------------------------------------------------------------------
+  // D3 regression guard: the shortlist no longer gates results
+  // ---------------------------------------------------------------------------
+
+  it("surfaces a commodity that would have fallen outside the top-35 margin shortlist but ranks high on realizable profit", async () => {
+    // 35 filler commodities each have a fat price-feed margin (≥101), so a
+    // top-35 margin shortlist would be entirely filled by them. Their routes are
+    // low-profit (realizable 200). The target commodity (id 999) has a tiny
+    // margin (10) — margin-rank 36, outside any top-35 shortlist — but its route
+    // carries a huge realizable profit. Under the old shortlist+fan-out path 999
+    // was never fetched and could never appear. Under the mirror read every
+    // commodity is ranked, so 999 surfaces (in fact at the top).
+    const prices: CommodityPriceRecord[] = [];
+    const mirrorRoutes: CommodityRoute[] = [];
+    for (let i = 1; i <= 35; i++) {
+      prices.push(priceRec(i, `Filler ${i}`, 100, 0));
+      prices.push(priceRec(i, `Filler ${i}`, 0, 200 + i)); // margin = 100 + i
+      mirrorRoutes.push(route(i * 10, i, 200));
+    }
+    prices.push(priceRec(999, "Deep Cut", 100, 0));
+    prices.push(priceRec(999, "Deep Cut", 0, 110)); // margin = 10 → rank 36
+    mirrorRoutes.push(route(99900, 999, 100000));
+
+    mockGetPrices.mockResolvedValue(prices);
+    mockGetAllRoutes.mockResolvedValue(mirrorRoutes);
+
+    const groups = await getTopRoutes(OPTS_ALL);
+    const ids = groups.map((g) => g.id_commodity);
+    expect(ids).toContain(999);
+    expect(groups[0].id_commodity).toBe(999);
   });
 });

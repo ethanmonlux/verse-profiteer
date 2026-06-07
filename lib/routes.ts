@@ -1,10 +1,10 @@
 import {
   getCommodityPricesAll,
-  getCommodityRoutes,
   getTerminals,
   CommodityPriceRecord,
   CommodityRoute,
 } from "@/lib/uex";
+import { getAllMirroredRoutes } from "@/lib/routesRepo";
 import { realizableProfit } from "@/lib/realizableProfit";
 
 export function shortlistCommodities(records: CommodityPriceRecord[], n: number): number[] {
@@ -59,8 +59,6 @@ export async function getTopRoutes(opts: {
   for (const t of terminals) {
     autoLoadMap.set(t.id, t.is_auto_load);
   }
-  const ids = shortlistCommodities(prices, SHORTLIST_SIZE);
-
   const nameMap = new Map<number, string>();
   for (const r of prices) {
     if (!nameMap.has(r.id_commodity) && r.commodity_name) {
@@ -68,14 +66,22 @@ export async function getTopRoutes(opts: {
     }
   }
 
-  const routeArrays = await Promise.all(ids.map((id) => getCommodityRoutes(id)));
+  const allRoutes = await getAllMirroredRoutes();
+  const routesByCommodity = new Map<number, CommodityRoute[]>();
+  for (const r of allRoutes) {
+    const bucket = routesByCommodity.get(r.id_commodity);
+    if (bucket) {
+      bucket.push(r);
+    } else {
+      routesByCommodity.set(r.id_commodity, [r]);
+    }
+  }
 
   const allowedSet = new Set(opts.allowedSystems);
 
   const groups: CommodityRouteGroup[] = [];
-  for (let i = 0; i < ids.length; i++) {
-    const id = ids[i];
-    const runnable = routeArrays[i].filter(
+  for (const [id, commodityRoutes] of routesByCommodity) {
+    const runnable = commodityRoutes.filter(
       (r) =>
         r.origin_star_system_name !== null &&
         r.destination_star_system_name !== null &&
