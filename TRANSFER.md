@@ -2,6 +2,15 @@
 
 Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, TODO.md, VERIFICATIONS.md (Pending). Flag if this file is stale relative to those.
 
+## Session state (2026-06-07 — READ-PATH MIGRATION SHIPPED + VERIFIED)
+
+- DONE: read-path migration shipped, verified on production, CI green (lint/typecheck/test). Route ranking reads from routes_mirror via lib/routesRepo.ts (getAllMirroredRoutes) instead of the live UEX per-commodity fan-out; top-35 shortlist removed (D3 landed in the read path). lib/db/index.ts now lazy-inits the connection (getPool()/getDb()) so build/CI/page-data collection no longer need DATABASE_URL at import — fixes the prod Server Components render crash and the CI test-load failure (recorded as D6).
+- Open follow-ups, priority order: (1) /api/verify mirror migration; (2) staleness-display beat (propose → confirm root cause → prompts next session); (3) conditional/delta refresh (gated on probe); (4) shortlistCommodities/SHORTLIST_SIZE dead-code cleanup; (5) tear down the probe service.
+- In-progress: temporary UEX cadence probe (5-min Railway cron) gathering data overnight; read its `[uex-cadence]` log lines next session to finalize the cadence decision (D2) and the conditional-refresh question.
+- Infra state: Vercel = app prod (DATABASE_URL = Railway public proxy, Sensitive, Prod+Preview); Railway = Postgres + worker (worker DATABASE_URL = internal) + temporary probe service (to be deleted); stray Railway app service already deleted.
+- Note: the `{ }` raw debug button is still live/ungated on production — tracked for strip/gate before public traffic.
+- Pending verification count after this session: 0 (read-path moved to Completed).
+
 ## Session state (2026-06-06 — MIRROR REFRESH WORKER VERIFIED, BEAT CLOSED)
 
 - DONE: mirror persistence + refresh worker fully shipped and verified. routes_mirror (~8930 rows) and terminals_mirror (823 rows) populating every 30 min on Railway cron. VF entry moved to Completed (VERIFICATIONS.md); connection/runtime decisions recorded as D5 (DECISIONS.md).
