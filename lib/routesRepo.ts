@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { routesMirror } from "@/lib/db/schema";
 import type { CommodityRoute } from "@/lib/uex";
 
@@ -8,6 +8,7 @@ import type { CommodityRoute } from "@/lib/uex";
 // (Spine Rule) is preserved: no profit/distance/duration is read from the typed
 // columns.
 export async function getAllMirroredRoutes(): Promise<CommodityRoute[]> {
+  const db = getDb();
   const rows = await db.select({ raw: routesMirror.raw }).from(routesMirror);
   return rows.map((row) => row.raw as CommodityRoute);
 }
