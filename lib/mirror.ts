@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 
-import { db } from "./db";
+import { getDb } from "./db";
 import { routesMirror, terminalsMirror } from "./db/schema";
 import type { CommodityRoute, Terminal } from "./uex";
 
@@ -81,6 +81,7 @@ export async function upsertTerminals(terminals: Terminal[]): Promise<number> {
     return 0;
   }
 
+  const db = getDb();
   const now = new Date();
 
   const rows = terminals.map((t) => ({
@@ -142,6 +143,7 @@ export async function upsertRoutes(routes: CommodityRoute[]): Promise<number> {
     return 0;
   }
 
+  const db = getDb();
   const now = new Date();
 
   const rows = routes.map((r) => {

@@ -1,4 +1,4 @@
-import { db, pool } from "@/lib/db";
+import { getDb, getPool } from "@/lib/db";
 import { pacedFanOut, upsertRoutes, upsertTerminals } from "@/lib/mirror";
 import { sql } from "drizzle-orm";
 import {
@@ -11,6 +11,8 @@ import type { CommodityRoute } from "@/lib/uex";
 async function main(): Promise<void> {
   const startedAt = Date.now();
   console.log(`[refresh-mirror] start ${new Date(startedAt).toISOString()}`);
+
+  const db = getDb();
 
   console.log("[refresh-mirror] probe: testing db connection...");
   const probeStart = Date.now();
@@ -53,5 +55,5 @@ main()
   })
   .finally(async () => {
     // Always close the pool so the process can exit cleanly.
-    await pool.end();
+    await getPool().end();
   });
