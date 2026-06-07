@@ -11,7 +11,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "refresh:mirror": "tsx scripts/refresh-mirror.ts"
+    "refresh:mirror": "tsx scripts/refresh-mirror.ts",
+    "probe:uex": "tsx scripts/probe-uex-cadence.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
