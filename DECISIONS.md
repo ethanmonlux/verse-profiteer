@@ -93,6 +93,20 @@ The spike itself (app/spike/loop) is throwaway and should be deleted once these 
 
 SOLE-USER NOTE: the operator is currently the only live user, which legitimately keeps debug surfaces ungated and auth/rate-sharing concerns out of scope. It does NOT relax the uncertainty-honesty framing above: verse-profiteer is also a public portfolio piece (a stranger hitting the deploy lacks the operator's context and will read an unlabeled rate as a hard claim), and future-operator will not remember which constants were seeds. The "estimate, not promise" rule therefore stays the default for displayed numbers regardless of current user count; sole-user simplification applies to access/infra ceremony, not to honest presentation of uncertain data.
 
+## D9 — Product north star: a play-time trading companion (reshapes the spine's purpose)
+**Decided:** 2026-06-08. **Class:** product direction. **Status:** RATIFIED as direction; informs spine schema design (next beat).
+
+The operator articulated the end-state product: not a board you read before playing, but a companion you operate WHILE playing. The flow: wake up at a starting terminal → the tool routes from the player's current location (load cargo, or fly empty/deadhead to a pickup) → at each terminal the player enters the actual on-screen commodity prices and quantities → the tool recomputes/reroutes, taking into account what is currently in the ship's hold → repeat at each stop. This is the product the operator has always wanted; it is the steering target for all spine-era design decisions.
+
+Three distinct capabilities, with very different costs:
+1. PLAYER-LOCATION-ORIGIN ROUTING (+ deadhead option): anchor/filter ranking to a starting terminal; allow a zero-cargo positioning leg. Small — a constraint on existing ranking, no new data model. The shippable front edge, and a prerequisite for the live loop (a loop is location-origin routing where the location is "here, now").
+2. MANUAL PRICE/QTY ENTRY as GROUND TRUTH (not "override"): the player on-site is the highest-quality price observer the tool can have. D8 proved UEX prices can be ~an hour stale while the route looks fresh; a freshly-entered observation SUPERSEDES UEX's crowdsourced value for that terminal. This reframes the backlog "user price overrides" item from a power-user toggle to a correctness feature for the moment of actual trading. Depends on the spine (entered observations need somewhere to live + a recompute path).
+3. CARRY-AWARE REROUTING across a trip: "reroute given what I'm holding right now." This IS the cargo-ledger spine (Plan/Leg/Item with live carry-state) plus a re-plan trigger. Not a separate feature — it is the spine's ultimate purpose. Carry-state = the ledger.
+
+SEQUENCING / TRAP TO AVOID: the "take a photo of the kiosk" framing implies OCR on the Star Citizen UI — an image-parsing reliability problem of its own. Do NOT build vision first. MANUAL ENTRY (type the values) delivers ~95% of the value at ~5% of the cost; OCR is a later input-adapter feeding the same entry-and-recompute path. Manual first; photos are a v2 input method, not the mechanism.
+
+CONSEQUENCE FOR THE SPINE: design the spine to model a TRIP BEING ACTIVELY FLOWN — player enters observations at each stop, plan recomputes against current hold — not merely a precomputed loop. This is a sharper spec than "model a loop" and should be the frame for the upcoming schema-design session. The objective function (D7, max aUEC/hr, ordinal until calibration) and the leg model (best-cargo-for-a-fixed-pair + deadhead verdict) still hold; D9 adds the live/observed/carry-aware dimension on top.
+
 ## Routes-source fork — resolved (supports D2/D3)
 **Decided:** 2026-06-03. **Status:** RATIFIED.
 
