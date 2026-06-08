@@ -1,4 +1,4 @@
-# Changelog — verse-profiteer 
+# Changelog — verse-profiteer  
 
 Format: one entry per shipped version. Newest on top. CC never edits this in a code prompt — doc updates are a separate prompt after code is committed.
 
