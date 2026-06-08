@@ -2,6 +2,13 @@
 
 Format: one entry per shipped version. Newest on top. CC never edits this in a code prompt — doc updates are a separate prompt after code is committed.
 
+## [2026-06-07]
+
+- Read-path migration shipped: route ranking now reads from routes_mirror via lib/routesRepo.ts (getAllMirroredRoutes) instead of the live UEX per-commodity fan-out. Top-35 margin shortlist removed (D3) — ranking now sees all commodities, eliminating the shortlist metric-mismatch class of bug. Verified on production.
+- lib/db/index.ts converted to lazy connection init (getPool()/getDb()): the connection is deferred from import-time to first-use, so next build, CI, and page-data collection no longer require DATABASE_URL at import. Fixes the production Server Components render crash and the CI test-load failure.
+- Infra: Vercel reaffirmed as app production host; the stray Railway web-app service was deleted (Railway now runs only Postgres + the refresh worker). Vercel DATABASE_URL set to the Railway public proxy URL (Sensitive, Production + Preview); the worker uses the internal *.railway.internal URL.
+- Added throwaway scripts/probe-uex-cadence.ts (probe:uex) and a temporary Railway cron service to measure UEX update cadence. Diagnostic only — to be torn down after measurement.
+
 ## [Unreleased]
 
 ### Added

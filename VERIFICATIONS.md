@@ -22,6 +22,9 @@ These exist for the life of the tool — they don’t “complete” once and di
 
 ## Completed — Code Verifications
 
+VF — Read-path migration (route ranking reads from routes_mirror)  [Completed 2026-06-07]
+- Verified on production (Vercel) 2026-06-07. Method: hand-reconciled the Aluminum card at ship=230, autoLoadBuy=1, autoLoadSell=1, Stanton. Top route Admin-Seraphim → Admin-Port Tressler: perSCU 1,315 (sell 4,600 − buy 3,285) × haul 1,874 SCU (ship-capacity bound) = realizable 2,464,310, matching the card headline exactly. Second/third routes (Everus Harbor 815/SCU; Area 18 515/SCU) also reconciled. Confirmed the board ranks across all commodities from routes_mirror with no top-35 shortlist. Result: PASS.
+
 VF — Mirror refresh worker (Railway)  [Completed 2026-06-06]
 - Verified: full run upserts 823 terminals + 8930 routes in ~103-134s, clean exit.
 - Verified: second consecutive run holds identical counts (823 / 8930), confirming onConflictDoUpdate updates in place rather than duplicate-inserting — EXCLUDED clauses and refreshed_at advance correctly.

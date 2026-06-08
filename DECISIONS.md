@@ -18,6 +18,13 @@ The UEX dataset is mirrored in Postgres and refreshed by a scheduled background 
 
 CORRECTION RECORDED: the belief that changing filters (systems / auto-load / ship size) triggers fresh UEX calls is FALSE. All three are applied in-memory after the cached fetch (verified in lib/routes.ts). Filter permutations cost zero new calls until TTL lapses. "Store UEX in DB to avoid rate limits" was therefore dropped as a reason for D1 — but it pointed at the real adjacent problem D3 fixes.
 
+AMENDED 2026-06-07 — cadence stays at 30 min, now evidence-backed. Measurements 2026-06-07:
+- (a) Price staleness: median commodities_prices_all date_modified age ~1.2 days (p25 ~12 hr, p75 ~3.1 days, p90 ~6.6 days, oldest ~450 days), stable across two pulls anchored to known pull times. Only ~4% of price rows are under 3 hr old.
+- (b) UEX route recompute: two commodities_routes (Titanium, id 75) pulls 8 min apart returned identical date_added (15:46:41 UTC) and identical 161-row sets — UEX recompute interval is >8 min, consistent with ~30 min or event-driven; not sub-10-min.
+- (c) In that same 8-min window, 0 of 2,576 price rows changed.
+
+Conclusion: the 30-min cron samples at roughly UEX's own route-recompute rate; polling faster fetches near-identical data and spends shared rate-cap budget for negligible freshness gain against day-scale price staleness. A finer-resolution probe (5-min cron) is running to confirm. Revisit only if the probe shows UEX recompute is sub-30-min, or if multi-user load changes rate-cap economics. The real accuracy lever is per-row staleness display + in-game price override, not cadence.
+
 ## D3 — Full mirror replaces the top-35 shortlist trim
 **Decided:** 2026-06-03. **Class:** ranking-math (escalation-gated). **Status:** RATIFIED, unbuilt.
 
@@ -47,6 +54,13 @@ CONSEQUENCE: because nothing computed is stored (see Spine Rule), ranking comput
 - A startup `select 1` probe is kept in the worker permanently — it isolates infrastructure failures from application/insert failures.
 - Inserts are chunked at 100 rows/statement (terminals and routes both) to keep statement size bounded.
 - Operational note: the original Postgres instance wedged into an "online but refuses all connections" state (Railway's own dashboard also could not connect; restart/redeploy did not recover it). Resolution was to delete and recreate the Postgres service — mirror data is regenerable cache, so zero data loss. If the same symptoms recur (probe ECONNRESET ~7s, dashboard "connection terminated unexpectedly"), suspect the DB instance, not the code; recreate rather than chasing code fixes.
+
+## D6 — Lazy DB-init contract (lib/db never throws at import time)
+**Decided:** 2026-06-07. **Class:** persistence / build-infra. **Status:** RATIFIED, shipped + verified.
+
+lib/db must never throw at import time. The pg Pool and drizzle db are constructed lazily behind getPool()/getDb(); connection (and any missing-DATABASE_URL) errors surface on first USE, not at module load. Justification: import-time connection construction required DATABASE_URL to be present during Next build, CI test-load, and page-data collection — environments that import the module without ever issuing a query. That coupling caused the production Server Components render crash and the CI test-load failure. Deferring to first-use decouples import from connection, so build/CI/collection no longer need the env var.
+
+ALTERNATIVE CONSIDERED AND REJECTED: move the whole app onto Railway as the app host (so the DB env is always present and internal). Rejected — it would discard the Vercel deploy/CI model for no benefit; the app is not a tight-loop DB consumer, so lazy init is sufficient and keeps the existing deploy pipeline intact.
 
 ## Routes-source fork — resolved (supports D2/D3)
 **Decided:** 2026-06-03. **Status:** RATIFIED.
