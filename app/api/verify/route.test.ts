@@ -79,7 +79,7 @@ describe("GET /api/verify", () => {
   });
 
   it("returns 502 when getMirroredRoutesByCommodity throws", async () => {
-    mockGetRoutes.mockRejectedValue(new Error("mirror not configured"));
+    mockGetRoutes.mockRejectedValue(new Error("DB not configured"));
 
     const req = new Request("http://test/api/verify?id_commodity=5");
     const res = await GET(req);
