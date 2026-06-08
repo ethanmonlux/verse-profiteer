@@ -70,6 +70,23 @@ lib/db must never throw at import time. The pg Pool and drizzle db are construct
 
 ALTERNATIVE CONSIDERED AND REJECTED: move the whole app onto Railway as the app host (so the DB env is always present and internal). Rejected — it would discard the Vercel deploy/CI model for no benefit; the app is not a tight-loop DB consumer, so lazy init is sufficient and keeps the existing deploy pipeline intact.
 
+## D7 — Loop planner objective is max aUEC/hr, and a leg must earn its place
+**Decided:** 2026-06-08. **Class:** ranking-math (loop composer). **Status:** RATIFIED as design intent, unbuilt.
+
+Surfaced by the loop plan-view spike (app/spike/loop, throwaway). The spike rendered a hand-authored 3-stop Stanton loop and exposed three things the eventual composer must encode:
+
+- OBJECTIVE: the loop planner maximizes aUEC PER HOUR over a closed loop, NOT total aUEC. These diverge: max-total keeps every positive-profit leg (UEX fleet-gross behavior, wrong for a solo player whose time is the scarce resource); max-per-hour CUTS a thin leg when deadheading that segment raises the loop's hourly rate. The spike's 24,768 Aluminum leg (vs ~190k on the other two legs) is the worked example — it dragged the loop's hourly rate down, so the honest planner should recommend dropping it and flying empty. "Never deadhead" is a HEURISTIC, not a law; the planner must be willing to recommend an empty leg.
+
+- LEG MODEL: a leg is NOT "stop A sells commodity X, stop B buys commodity Y." A leg is a FIXED origin→destination pair + the best-available cargo to carry across that pair + a verdict on whether carrying anything beats deadheading. The two prices at a node are independent (it is the sell terminal for the inbound commodity and the buy terminal for a different outbound commodity); a node being a good sell point says nothing about it being a good buy point. Per-leg profit is a property of the COMMODITY CARRIED between two stops, not of either stop. Edge profit = existing capacity-aware getTopRoutes ranking applied to a fixed pair instead of all pairs.
+
+- TIME IS THE BLOCKER: aUEC/hr's denominator is time (travel + load + unload). Travel-time constants are still uncalibrated seeds (standing VERIFICATIONS calibration run, blocked on in-game measurement). A loop optimizer fed untrustworthy time estimates will confidently rank garbage loops. Therefore the per-hour objective CANNOT be the live ranking until travel time is calibrated.
+
+BUILD-ORDER CONSEQUENCE: ship the loop planner ranked by TOTAL PROFIT first (with per-leg deadhead-vs-carry flags and a stale-leg warning carried over from the price-age work), explicitly labeled "per-hour ranking pending travel-time calibration." Flip the objective to aUEC/hr only after calibration lands. This decouples the feature from the one input the operator currently cannot collect.
+
+ALGORITHM NOTE: max-ratio cycle is a hard (TSP-adjacent) class. Do NOT attempt a general optimum. Bounded loops (2-3 stops, possibly 4) within a single system are enumerable — enumerate and score. "Best 3-stop Stanton loop" is tractable; "best loop of any length across all systems" is out of scope.
+
+The spike itself (app/spike/loop) is throwaway and should be deleted once these findings are captured — it is fake data and is currently live on the public deploy.
+
 ## Routes-source fork — resolved (supports D2/D3)
 **Decided:** 2026-06-03. **Status:** RATIFIED.
 

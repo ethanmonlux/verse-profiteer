@@ -2,6 +2,10 @@
 
 Format: one entry per shipped version. Newest on top. CC never edits this in a code prompt — doc updates are a separate prompt after code is committed.
 
+## [2026-06-08]
+
+- Loop plan-view spike (app/spike/loop) — throwaway hand-authored 3-stop Stanton loop to probe the multi-leg UX before building the cargo-ledger spine. Surfaced the loop planner's objective function and leg model; captured as DECISIONS D7. Spike is fake-data and slated for deletion (see TODO Chore).
+
 ## [2026-06-07]
 
 - Read-path migration shipped: route ranking now reads from routes_mirror via lib/routesRepo.ts (getAllMirroredRoutes) instead of the live UEX per-commodity fan-out. Top-35 margin shortlist removed (D3) — ranking now sees all commodities, eliminating the shortlist metric-mismatch class of bug. Verified on production.
