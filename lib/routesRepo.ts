@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { routesMirror } from "@/lib/db/schema";
 import type { CommodityRoute } from "@/lib/uex";
@@ -10,5 +11,20 @@ import type { CommodityRoute } from "@/lib/uex";
 export async function getAllMirroredRoutes(): Promise<CommodityRoute[]> {
   const db = getDb();
   const rows = await db.select({ raw: routesMirror.raw }).from(routesMirror);
+  return rows.map((row) => row.raw as CommodityRoute);
+}
+
+// Reads only the rows for one commodity from the Postgres mirror, querying on
+// the indexed id_commodity column. Same as getAllMirroredRoutes: the `raw`
+// jsonb column is the exact original CommodityRoute object, returned with no
+// field mapping. Spine Rule preserved: nothing is read from the typed columns.
+export async function getMirroredRoutesByCommodity(
+  idCommodity: number,
+): Promise<CommodityRoute[]> {
+  const db = getDb();
+  const rows = await db
+    .select({ raw: routesMirror.raw })
+    .from(routesMirror)
+    .where(eq(routesMirror.idCommodity, idCommodity));
   return rows.map((row) => row.raw as CommodityRoute);
 }
