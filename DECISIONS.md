@@ -91,6 +91,8 @@ ALGORITHM NOTE: max-ratio cycle is a hard (TSP-adjacent) class. Do NOT attempt a
 
 The spike itself (app/spike/loop) is throwaway and should be deleted once these findings are captured — it is fake data and is currently live on the public deploy.
 
+SOLE-USER NOTE: the operator is currently the only live user, which legitimately keeps debug surfaces ungated and auth/rate-sharing concerns out of scope. It does NOT relax the uncertainty-honesty framing above: verse-profiteer is also a public portfolio piece (a stranger hitting the deploy lacks the operator's context and will read an unlabeled rate as a hard claim), and future-operator will not remember which constants were seeds. The "estimate, not promise" rule therefore stays the default for displayed numbers regardless of current user count; sole-user simplification applies to access/infra ceremony, not to honest presentation of uncertain data.
+
 ## Routes-source fork — resolved (supports D2/D3)
 **Decided:** 2026-06-03. **Status:** RATIFIED.
 
