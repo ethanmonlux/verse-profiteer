@@ -23,6 +23,54 @@ async function main(): Promise<void> {
     0,
   );
 
+  // Track the single highest-profit route (UEX's own profit field) so the same
+  // route is followed across runs. Derived from the routes array already pulled.
+  const bestRoute = routes.reduce<(typeof routes)[number] | null>(
+    (best, r) => (best === null || r.profit > best.profit ? r : best),
+    null,
+  );
+  const topRoute = bestRoute && {
+    origin_terminal_name: bestRoute.origin_terminal_name,
+    destination_terminal_name: bestRoute.destination_terminal_name,
+    price_origin: bestRoute.price_origin,
+    price_destination: bestRoute.price_destination,
+    profit: bestRoute.profit,
+    scu_origin: bestRoute.scu_origin,
+    scu_destination: bestRoute.scu_destination,
+    scu_reachable: bestRoute.scu_reachable,
+    status_origin: bestRoute.status_origin,
+    status_destination: bestRoute.status_destination,
+    date_added: bestRoute.date_added,
+  };
+
+  // Bucket every price row by age (now - date_modified) from the prices array
+  // already pulled. Missing/zero date_modified counts as the oldest band.
+  const nowUnix = Date.now() / 1000;
+  const priceAgeBuckets = {
+    under30min: 0,
+    under3hr: 0,
+    under12hr: 0,
+    under1day: 0,
+    under3day: 0,
+    under7day: 0,
+    over7day: 0,
+  };
+  for (const p of prices) {
+    const modified = p.date_modified ?? 0;
+    if (modified <= 0) {
+      priceAgeBuckets.over7day += 1;
+      continue;
+    }
+    const ageSec = nowUnix - modified;
+    if (ageSec < 30 * 60) priceAgeBuckets.under30min += 1;
+    else if (ageSec < 3 * 3600) priceAgeBuckets.under3hr += 1;
+    else if (ageSec < 12 * 3600) priceAgeBuckets.under12hr += 1;
+    else if (ageSec < 24 * 3600) priceAgeBuckets.under1day += 1;
+    else if (ageSec < 3 * 24 * 3600) priceAgeBuckets.under3day += 1;
+    else if (ageSec < 7 * 24 * 3600) priceAgeBuckets.under7day += 1;
+    else priceAgeBuckets.over7day += 1;
+  }
+
   const line = {
     ts: new Date().toISOString(),
     probeId,
@@ -36,6 +84,8 @@ async function main(): Promise<void> {
       unix: newestRouteUnix,
     },
     routeCount: routes.length,
+    topRoute: topRoute ?? null,
+    priceAgeBuckets,
   };
 
   console.log(`${TOKEN} ${JSON.stringify(line)}`);
