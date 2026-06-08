@@ -4,6 +4,9 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 
 ## [2026-06-08]
 
+- /api/verify migrated to read the Postgres mirror (getMirroredRoutesByCommodity in lib/routesRepo.ts) instead of live UEX (getCommodityRoutes). The raw debug button now verifies against the same source the board ranks from, so spot-checks no longer show spurious mismatches. Test updated to mock the repo accessor; CI green.
+- Removed dead code: shortlistCommodities and SHORTLIST_SIZE in lib/routes.ts (unused since the D3 read-path migration dropped the top-35 shortlist) and their unit tests. Clears the lint warning.
+- Staleness-display honesty fix: card label changed from "Updated {N} ago" (which read date_added — route-row creation time, not a freshness signal) to "prices last seen {N}", computed as the older of the two price legs' date_modified, joined in-memory in getTopRoutes (dataAgeUnix on RouteWithAutoLoad, derived-on-read). Reads "price age unknown" when either leg is absent from the prices feed. Rationale: date_modified is last-human-observation, not last-price-change, so the label is an observation timestamp, not a freshness promise. State-sensitive — see VERIFICATIONS Pending.
 - Loop plan-view spike (app/spike/loop) — throwaway hand-authored 3-stop Stanton loop to probe the multi-leg UX before building the cargo-ledger spine. Surfaced the loop planner's objective function and leg model; captured as DECISIONS D7. Spike is fake-data and slated for deletion (see TODO Chore).
 
 ## [2026-06-07]
