@@ -18,12 +18,20 @@ The UEX dataset is mirrored in Postgres and refreshed by a scheduled background 
 
 CORRECTION RECORDED: the belief that changing filters (systems / auto-load / ship size) triggers fresh UEX calls is FALSE. All three are applied in-memory after the cached fetch (verified in lib/routes.ts). Filter permutations cost zero new calls until TTL lapses. "Store UEX in DB to avoid rate limits" was therefore dropped as a reason for D1 — but it pointed at the real adjacent problem D3 fixes.
 
-AMENDED 2026-06-07 — cadence stays at 30 min, now evidence-backed. Measurements 2026-06-07:
+AMENDED 2026-06-07 (SUPERSEDED — see correction below) — cadence stays at 30 min, based on an 8-min snapshot since shown to be unrepresentative. Measurements 2026-06-07:
 - (a) Price staleness: median commodities_prices_all date_modified age ~1.2 days (p25 ~12 hr, p75 ~3.1 days, p90 ~6.6 days, oldest ~450 days), stable across two pulls anchored to known pull times. Only ~4% of price rows are under 3 hr old.
 - (b) UEX route recompute: two commodities_routes (Titanium, id 75) pulls 8 min apart returned identical date_added (15:46:41 UTC) and identical 161-row sets — UEX recompute interval is >8 min, consistent with ~30 min or event-driven; not sub-10-min.
 - (c) In that same 8-min window, 0 of 2,576 price rows changed.
 
 Conclusion: the 30-min cron samples at roughly UEX's own route-recompute rate; polling faster fetches near-identical data and spends shared rate-cap budget for negligible freshness gain against day-scale price staleness. A finer-resolution probe (5-min cron) is running to confirm. Revisit only if the probe shows UEX recompute is sub-30-min, or if multi-user load changes rate-cap economics. The real accuracy lever is per-row staleness display + in-game price override, not cadence.
+
+CORRECTED 2026-06-07 (overnight probe, 11.4 hr / 138 samples / 26 recompute events) — cadence changed 30 min -> 15 min.
+- UEX recomputes commodities_routes on a ~15-min base cadence (median gap 16 min, hard floor 15 min, occasional 29-75 min gaps during low-activity overnight hours). The earlier 8-min snapshot landed inside one 15-min cycle and wrongly suggested a >=30-min / event-driven interval.
+- The newest-price clock and the route-recompute clock move in lockstep, with a ~10-15 min lag from a price being logged to its inclusion in a recompute. So routes track prices promptly; routes are NOT a slow 30-min ceiling.
+- Simulated extra mirror lag (on top of UEX-available data) by cron cadence: 30-min avg 8.3 min / p99 75 min; 15-min avg 1.8 min / p99 16 min; 10-min avg 3.0 min (worse than 15 due to phase misalignment with the 15-min cycle); 5-min avg 0.8 min / p99 16 min.
+- Decision: 15-min cron. It matches UEX's recompute floor (catch nearly every recompute one cycle later). Polling faster than 15 cannot lower the worst case (bounded by UEX's own ~15-min-to-75-min gaps) and triples API volume for ~1 min average gain on data whose underlying prices are ~1.2 days old. 10 min is explicitly rejected (phase-misaligned, worse than 15). Below 15 reconsidered only if a daytime/peak sample shows UEX recomputing faster under load.
+- Unchanged: this reduces controllable mirror lag only. Underlying crowdsourced price age (~1.2-day median) is untouched by cadence; per-row staleness display + in-game price override remain the dominant accuracy levers.
+- Action: Railway worker cron set to */15 (was */30). priceRowCount was also observed growing 2576 -> 2588 overnight (UEX catalog additions); informational only.
 
 ## D3 — Full mirror replaces the top-35 shortlist trim
 **Decided:** 2026-06-03. **Class:** ranking-math (escalation-gated). **Status:** RATIFIED, unbuilt.
