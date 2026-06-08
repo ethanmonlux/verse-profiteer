@@ -23,33 +23,28 @@ async function main(): Promise<void> {
     0,
   );
 
-  // Highest-profit route (UEX's own profit field), so the same route is tracked
-  // consistently across runs. Derived from the routes array already pulled.
-  const best = routes.reduce<(typeof routes)[number] | null>(
-    (top, r) => (top === null || r.profit > top.profit ? r : top),
+  // Track the single highest-profit route (UEX's own profit field) so the same
+  // route is followed across runs. Derived from the routes array already pulled.
+  const bestRoute = routes.reduce<(typeof routes)[number] | null>(
+    (best, r) => (best === null || r.profit > best.profit ? r : best),
     null,
   );
-  const topRoute =
-    best === null
-      ? null
-      : {
-          origin_terminal_name: best.origin_terminal_name,
-          destination_terminal_name: best.destination_terminal_name,
-          price_origin: best.price_origin,
-          price_destination: best.price_destination,
-          profit: best.profit,
-          scu_origin: best.scu_origin,
-          scu_destination: best.scu_destination,
-          scu_reachable: best.scu_reachable,
-          status_origin: best.status_origin,
-          status_destination: best.status_destination,
-          date_added: best.date_added,
-        };
+  const topRoute = bestRoute && {
+    origin_terminal_name: bestRoute.origin_terminal_name,
+    destination_terminal_name: bestRoute.destination_terminal_name,
+    price_origin: bestRoute.price_origin,
+    price_destination: bestRoute.price_destination,
+    profit: bestRoute.profit,
+    scu_origin: bestRoute.scu_origin,
+    scu_destination: bestRoute.scu_destination,
+    scu_reachable: bestRoute.scu_reachable,
+    status_origin: bestRoute.status_origin,
+    status_destination: bestRoute.status_destination,
+    date_added: bestRoute.date_added,
+  };
 
-  // Price-age histogram from the prices array already pulled. Mutually exclusive
-  // bands; a row with missing/zero date_modified counts as over7day.
-  const HOUR = 3600;
-  const DAY = 24 * HOUR;
+  // Bucket every price row by age (now - date_modified) from the prices array
+  // already pulled. Missing/zero date_modified counts as the oldest band.
   const nowUnix = Date.now() / 1000;
   const priceAgeBuckets = {
     under30min: 0,
@@ -62,14 +57,18 @@ async function main(): Promise<void> {
   };
   for (const p of prices) {
     const modified = p.date_modified ?? 0;
-    const age = modified > 0 ? nowUnix - modified : Infinity;
-    if (age < 0.5 * HOUR) priceAgeBuckets.under30min++;
-    else if (age < 3 * HOUR) priceAgeBuckets.under3hr++;
-    else if (age < 12 * HOUR) priceAgeBuckets.under12hr++;
-    else if (age < 1 * DAY) priceAgeBuckets.under1day++;
-    else if (age < 3 * DAY) priceAgeBuckets.under3day++;
-    else if (age < 7 * DAY) priceAgeBuckets.under7day++;
-    else priceAgeBuckets.over7day++;
+    if (modified <= 0) {
+      priceAgeBuckets.over7day += 1;
+      continue;
+    }
+    const ageSec = nowUnix - modified;
+    if (ageSec < 30 * 60) priceAgeBuckets.under30min += 1;
+    else if (ageSec < 3 * 3600) priceAgeBuckets.under3hr += 1;
+    else if (ageSec < 12 * 3600) priceAgeBuckets.under12hr += 1;
+    else if (ageSec < 24 * 3600) priceAgeBuckets.under1day += 1;
+    else if (ageSec < 3 * 24 * 3600) priceAgeBuckets.under3day += 1;
+    else if (ageSec < 7 * 24 * 3600) priceAgeBuckets.under7day += 1;
+    else priceAgeBuckets.over7day += 1;
   }
 
   const line = {
@@ -86,7 +85,8 @@ async function main(): Promise<void> {
       unix: newestRouteUnix,
     },
     routeCount: routes.length,
-    topRoute,
+    topRoute: topRoute ?? null,
+    priceAgeBuckets,
   };
 
   console.log(`${TOKEN} ${JSON.stringify(line)}`);
