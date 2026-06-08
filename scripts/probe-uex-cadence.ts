@@ -86,7 +86,6 @@ async function main(): Promise<void> {
     },
     routeCount: routes.length,
     topRoute: topRoute ?? null,
-    priceAgeBuckets,
   };
 
   console.log(`${TOKEN} ${JSON.stringify(line)}`);
