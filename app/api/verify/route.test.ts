@@ -1,14 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CommodityRoute } from "@/lib/uex";
 
-vi.mock("@/lib/uex", () => ({
-  getCommodityRoutes: vi.fn(),
+vi.mock("@/lib/routesRepo", () => ({
+  getMirroredRoutesByCommodity: vi.fn(),
 }));
 
-import { getCommodityRoutes } from "@/lib/uex";
+import { getMirroredRoutesByCommodity } from "@/lib/routesRepo";
 import { GET } from "@/app/api/verify/route";
 
-const mockGetRoutes = getCommodityRoutes as ReturnType<typeof vi.fn>;
+const mockGetRoutes = getMirroredRoutesByCommodity as ReturnType<
+  typeof vi.fn
+>;
 
 const fixtureRoutes: CommodityRoute[] = [
   {
@@ -76,8 +78,8 @@ describe("GET /api/verify", () => {
     expect(await res.json()).toEqual({ error: "id_commodity required" });
   });
 
-  it("returns 502 when getCommodityRoutes throws", async () => {
-    mockGetRoutes.mockRejectedValue(new Error("UEX not configured"));
+  it("returns 502 when getMirroredRoutesByCommodity throws", async () => {
+    mockGetRoutes.mockRejectedValue(new Error("DB not configured"));
 
     const req = new Request("http://test/api/verify?id_commodity=5");
     const res = await GET(req);
