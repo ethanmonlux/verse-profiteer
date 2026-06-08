@@ -1,36 +1,11 @@
 import {
   getCommodityPricesAll,
   getTerminals,
-  CommodityPriceRecord,
   CommodityRoute,
 } from "@/lib/uex";
 import { getAllMirroredRoutes } from "@/lib/routesRepo";
 import { realizableProfit } from "@/lib/realizableProfit";
 
-export function shortlistCommodities(records: CommodityPriceRecord[], n: number): number[] {
-  const margins = new Map<number, { maxSell: number; minBuy: number }>();
-
-  for (const r of records) {
-    const entry = margins.get(r.id_commodity) ?? { maxSell: 0, minBuy: Infinity };
-    if (r.price_sell > 0 && r.price_sell > entry.maxSell) entry.maxSell = r.price_sell;
-    if (r.price_buy > 0 && r.price_buy < entry.minBuy) entry.minBuy = r.price_buy;
-    margins.set(r.id_commodity, entry);
-  }
-
-  return Array.from(margins.entries())
-    .filter(([, { maxSell, minBuy }]) => maxSell > 0 && minBuy < Infinity)
-    .map(([id, { maxSell, minBuy }]) => ({ id, margin: maxSell - minBuy }))
-    .sort((a, b) => b.margin - a.margin)
-    .slice(0, n)
-    .map(({ id }) => id);
-}
-
-// Over-fetch buffer: fetch 35 candidates, show 10. Wider than the original 20
-// because system-filtering thins survivors and the shortlist is system-blind
-// (the prices feed carries no system field). A short board is acceptable and
-// surfaced honestly in the UI; this widens the odds of filling 10 without a
-// /terminals join, which is deferred to v2.
-const SHORTLIST_SIZE = 35;
 const DISPLAY_COUNT = 10;
 
 // Start at 1 (only single-route commodities, e.g. Osoian Hides). Route count is a weak proxy — see Outlier guard v2 in TODO. Do not loosen without that work.
