@@ -379,3 +379,63 @@ describe("getTopRoutes", () => {
     expect(groups[0].id_commodity).toBe(999);
   });
 });
+
+describe("getTopRoutes dataAgeUnix", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetTerminals.mockResolvedValue([]);
+  });
+
+  function ageRoute(idTermOrigin: number, idTermDest: number): CommodityRoute {
+    return {
+      ...route(900, 7, 500),
+      id_terminal_origin: idTermOrigin,
+      id_terminal_destination: idTermDest,
+    };
+  }
+
+  function agenPrice(idTerminal: number, dateModified: number): CommodityPriceRecord {
+    return {
+      ...priceRec(7, "Quartz", 100, 0),
+      id_terminal: idTerminal,
+      date_modified: dateModified,
+    };
+  }
+
+  it("sets dataAgeUnix to the older (smaller) of the two legs when both present", async () => {
+    mockGetPrices.mockResolvedValue([
+      priceRec(7, "Quartz", 100, 0),
+      priceRec(7, "Quartz", 0, 300),
+      agenPrice(10, 1_700_000_500),
+      agenPrice(20, 1_700_000_100),
+    ]);
+    mockGetAllRoutes.mockResolvedValue([ageRoute(10, 20)]);
+
+    const groups = await getTopRoutes(OPTS_ALL);
+    expect(groups[0].routes[0].dataAgeUnix).toBe(1_700_000_100);
+  });
+
+  it("sets dataAgeUnix to null when the origin leg is missing", async () => {
+    mockGetPrices.mockResolvedValue([
+      priceRec(7, "Quartz", 100, 0),
+      priceRec(7, "Quartz", 0, 300),
+      agenPrice(20, 1_700_000_100),
+    ]);
+    mockGetAllRoutes.mockResolvedValue([ageRoute(10, 20)]);
+
+    const groups = await getTopRoutes(OPTS_ALL);
+    expect(groups[0].routes[0].dataAgeUnix).toBeNull();
+  });
+
+  it("sets dataAgeUnix to null when the destination leg is missing", async () => {
+    mockGetPrices.mockResolvedValue([
+      priceRec(7, "Quartz", 100, 0),
+      priceRec(7, "Quartz", 0, 300),
+      agenPrice(10, 1_700_000_500),
+    ]);
+    mockGetAllRoutes.mockResolvedValue([ageRoute(10, 20)]);
+
+    const groups = await getTopRoutes(OPTS_ALL);
+    expect(groups[0].routes[0].dataAgeUnix).toBeNull();
+  });
+});

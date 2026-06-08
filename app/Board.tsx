@@ -40,7 +40,9 @@ export default function Board({
             </p>
           )}
           {groups.map((group) => {
-            const { label, stale } = relativeAge(group.routes[0].date_added);
+            const headlineAge = group.routes[0].dataAgeUnix;
+            const ageInfo = headlineAge !== null ? relativeAge(headlineAge) : null;
+            const stale = ageInfo === null || ageInfo.stale;
             const isExpanded = expandedCards.has(group.id_commodity);
             const routesToShow = isExpanded ? group.routes : [group.routes[0]];
             const primaryRealizable = realizableProfit(group.routes[0], capacity);
@@ -126,7 +128,7 @@ export default function Board({
                 <p className="mt-1 text-xs text-text-muted">travel time uncalibrated — seed estimate</p>
 
                 <div className={`mt-2 text-xs ${stale ? "text-warning" : "text-text-muted"}`}>
-                  Updated {label}
+                  {ageInfo !== null ? `prices last seen ${ageInfo.label}` : "price age unknown"}
                 </div>
                 <DebugRoutes idCommodity={group.id_commodity} />
               </div>
