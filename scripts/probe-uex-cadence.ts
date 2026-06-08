@@ -79,6 +79,7 @@ async function main(): Promise<void> {
       unix: newestPriceUnix,
     },
     priceRowCount: prices.length,
+    priceAgeBuckets,
     newestRouteAdded: {
       iso: new Date(newestRouteUnix * 1000).toISOString(),
       unix: newestRouteUnix,
