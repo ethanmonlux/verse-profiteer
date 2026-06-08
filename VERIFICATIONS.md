@@ -11,7 +11,10 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
-(none)
+VF — Staleness-display label (per-route price-leg data age)  [Pending]
+- Change: card label switched from "Updated {date_added} ago" (route-row creation time) to "prices last seen {N}" / "price age unknown", computed in getTopRoutes as the older of the two price legs' date_modified (dataAgeUnix on RouteWithAutoLoad), null when either leg is missing from the prices feed. State-sensitive (staleness display).
+- How to verify: on the production board, pick a headline route. In a second tab, query commodities_prices_all and find the buy-terminal and sell-terminal price records for that commodity. Read each record's date_modified. Confirm the card's "prices last seen {N}" matches relativeAge of the OLDER (smaller) of the two date_modified values. Then find (or force, via a route whose terminal has no price record) a missing-leg case and confirm the card reads "price age unknown", not a number. Confirm the warning color shows when the age exceeds the 30-day stale threshold.
+- Result: (pending run)
 
 ## Pending — Calibration Runs
 
