@@ -39,6 +39,7 @@ const ROUTE_COUNT_MIN = 1;
 export type RouteWithAutoLoad = CommodityRoute & {
   autoLoadOrigin: number;
   autoLoadDestination: number;
+  dataAgeUnix: number | null;
 };
 
 export interface CommodityRouteGroup {
@@ -64,6 +65,10 @@ export async function getTopRoutes(opts: {
     if (!nameMap.has(r.id_commodity) && r.commodity_name) {
       nameMap.set(r.id_commodity, r.commodity_name);
     }
+  }
+  const priceModifiedMap = new Map<string, number>();
+  for (const r of prices) {
+    priceModifiedMap.set(`${r.id_commodity}:${r.id_terminal}`, r.date_modified);
   }
 
   const allRoutes = await getAllMirroredRoutes();
@@ -94,15 +99,24 @@ export async function getTopRoutes(opts: {
     const sorted = runnable
       .slice()
       .sort((a, b) => realizableProfit(b, opts.shipCapacity) - realizableProfit(a, opts.shipCapacity));
-    const top3: RouteWithAutoLoad[] = sorted.slice(0, 3).map((r) => ({
-      ...r,
-      autoLoadOrigin: autoLoadMap.has(r.id_terminal_origin)
-        ? (autoLoadMap.get(r.id_terminal_origin) as number)
-        : -1,
-      autoLoadDestination: autoLoadMap.has(r.id_terminal_destination)
-        ? (autoLoadMap.get(r.id_terminal_destination) as number)
-        : -1,
-    }));
+    const top3: RouteWithAutoLoad[] = sorted.slice(0, 3).map((r) => {
+      const originMod = priceModifiedMap.get(`${id}:${r.id_terminal_origin}`);
+      const destMod = priceModifiedMap.get(`${id}:${r.id_terminal_destination}`);
+      const dataAgeUnix =
+        originMod !== undefined && destMod !== undefined
+          ? Math.min(originMod, destMod)
+          : null;
+      return {
+        ...r,
+        autoLoadOrigin: autoLoadMap.has(r.id_terminal_origin)
+          ? (autoLoadMap.get(r.id_terminal_origin) as number)
+          : -1,
+        autoLoadDestination: autoLoadMap.has(r.id_terminal_destination)
+          ? (autoLoadMap.get(r.id_terminal_destination) as number)
+          : -1,
+        dataAgeUnix,
+      };
+    });
     groups.push({
       id_commodity: id,
       commodityName: nameMap.get(id) ?? `Commodity ${id}`,
