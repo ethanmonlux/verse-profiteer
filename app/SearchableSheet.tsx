@@ -89,7 +89,7 @@ export default function SearchableSheet({
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/60" onClick={close} />
           <div
-            className="relative bg-bg-card rounded-t-2xl flex flex-col overflow-hidden h-[90svh]"
+            className="relative bg-bg-card rounded-t-2xl flex flex-col overflow-hidden h-[90svh] max-h-[100dvh]"
             style={{
               animation: reducedMotion ? undefined : "slideUp 0.2s ease-out",
             }}
@@ -115,10 +115,17 @@ export default function SearchableSheet({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search..."
+                enterKeyHint="done"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
                 className="w-full bg-bg-card border border-border rounded text-sm px-3 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
               />
             </div>
-            <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain">
+            <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain pb-[40vh]">
               <button
                 type="button"
                 onClick={() => handleSelect(undefined)}
