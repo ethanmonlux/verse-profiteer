@@ -1,0 +1,803 @@
+{
+  "id": "83cb3c29-7832-42f8-b769-cfef1af68ae8",
+  "prevId": "5ad12546-e0f2-461e-863f-81436ad31abb",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.items": {
+      "name": "items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "items_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "plan_id": {
+          "name": "plan_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "leg_id": {
+          "name": "leg_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_commodity": {
+          "name": "id_commodity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movement": {
+          "name": "movement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "disposition": {
+          "name": "disposition",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu": {
+          "name": "scu",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit_price": {
+          "name": "unit_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fee": {
+          "name": "fee",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_terminal": {
+          "name": "id_terminal",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "items_plan_idx": {
+          "name": "items_plan_idx",
+          "columns": [
+            {
+              "expression": "plan_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "items_leg_idx": {
+          "name": "items_leg_idx",
+          "columns": [
+            {
+              "expression": "leg_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "items_commodity_idx": {
+          "name": "items_commodity_idx",
+          "columns": [
+            {
+              "expression": "id_commodity",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "items_plan_id_plans_id_fk": {
+          "name": "items_plan_id_plans_id_fk",
+          "tableFrom": "items",
+          "tableTo": "plans",
+          "columnsFrom": [
+            "plan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "items_leg_id_legs_id_fk": {
+          "name": "items_leg_id_legs_id_fk",
+          "tableFrom": "items",
+          "tableTo": "legs",
+          "columnsFrom": [
+            "leg_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.legs": {
+      "name": "legs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "legs_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "plan_id": {
+          "name": "plan_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_terminal_origin": {
+          "name": "id_terminal_origin",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_terminal_destination": {
+          "name": "id_terminal_destination",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_activity": {
+          "name": "source_activity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'trade'"
+        },
+        "id_commodity": {
+          "name": "id_commodity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "legs_plan_seq_idx": {
+          "name": "legs_plan_seq_idx",
+          "columns": [
+            {
+              "expression": "plan_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "seq",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "legs_plan_id_plans_id_fk": {
+          "name": "legs_plan_id_plans_id_fk",
+          "tableFrom": "legs",
+          "tableTo": "plans",
+          "columnsFrom": [
+            "plan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.plans": {
+      "name": "plans",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "plans_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "tenant_id": {
+          "name": "tenant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'operator'"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ship_capacity_scu": {
+          "name": "ship_capacity_scu",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "allowed_systems": {
+          "name": "allowed_systems",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_terminal_id": {
+          "name": "start_terminal_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.price_observations": {
+      "name": "price_observations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "price_observations_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "tenant_id": {
+          "name": "tenant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'operator'"
+        },
+        "id_commodity": {
+          "name": "id_commodity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_terminal": {
+          "name": "id_terminal",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_buy": {
+          "name": "price_buy",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_sell": {
+          "name": "price_sell",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu_available": {
+          "name": "scu_available",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "observed_at": {
+          "name": "observed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "plan_id": {
+          "name": "plan_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leg_id": {
+          "name": "leg_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "price_obs_commodity_terminal_observed_idx": {
+          "name": "price_obs_commodity_terminal_observed_idx",
+          "columns": [
+            {
+              "expression": "id_commodity",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id_terminal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "observed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "price_observations_plan_id_plans_id_fk": {
+          "name": "price_observations_plan_id_plans_id_fk",
+          "tableFrom": "price_observations",
+          "tableTo": "plans",
+          "columnsFrom": [
+            "plan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "price_observations_leg_id_legs_id_fk": {
+          "name": "price_observations_leg_id_legs_id_fk",
+          "tableFrom": "price_observations",
+          "tableTo": "legs",
+          "columnsFrom": [
+            "leg_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.routes_mirror": {
+      "name": "routes_mirror",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id_commodity": {
+          "name": "id_commodity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_terminal_origin": {
+          "name": "id_terminal_origin",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_terminal_destination": {
+          "name": "id_terminal_destination",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_star_system_origin": {
+          "name": "id_star_system_origin",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_star_system_destination": {
+          "name": "id_star_system_destination",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_origin": {
+          "name": "price_origin",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_destination": {
+          "name": "price_destination",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profit": {
+          "name": "profit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "investment": {
+          "name": "investment",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "distance": {
+          "name": "distance",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu_origin": {
+          "name": "scu_origin",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu_destination": {
+          "name": "scu_destination",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scu_reachable": {
+          "name": "scu_reachable",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status_origin": {
+          "name": "status_origin",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status_destination": {
+          "name": "status_destination",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "container_sizes_origin": {
+          "name": "container_sizes_origin",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "container_sizes_destination": {
+          "name": "container_sizes_destination",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_version_origin": {
+          "name": "game_version_origin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_version_destination": {
+          "name": "game_version_destination",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "refreshed_at": {
+          "name": "refreshed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "routes_mirror_id_commodity_idx": {
+          "name": "routes_mirror_id_commodity_idx",
+          "columns": [
+            {
+              "expression": "id_commodity",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "routes_mirror_star_systems_idx": {
+          "name": "routes_mirror_star_systems_idx",
+          "columns": [
+            {
+              "expression": "id_star_system_origin",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id_star_system_destination",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.terminals_mirror": {
+      "name": "terminals_mirror",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "is_auto_load": {
+          "name": "is_auto_load",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "star_system_name": {
+          "name": "star_system_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "planet_name": {
+          "name": "planet_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "moon_name": {
+          "name": "moon_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outpost_name": {
+          "name": "outpost_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_cargo_center": {
+          "name": "is_cargo_center",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_freight_elevator": {
+          "name": "has_freight_elevator",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_loading_dock": {
+          "name": "has_loading_dock",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_docking_port": {
+          "name": "has_docking_port",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "refreshed_at": {
+          "name": "refreshed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

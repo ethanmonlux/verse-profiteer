@@ -8,6 +8,13 @@
       "when": 1780588099418,
       "tag": "0000_closed_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781027382718,
+      "tag": "0001_sleepy_gauntlet",
+      "breakpoints": true
     }
   ]
 }
