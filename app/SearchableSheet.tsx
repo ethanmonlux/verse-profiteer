@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type SheetOption = { id: number; primary: string; secondary?: string };
+export type SheetOption = {
+  id: number;
+  primary: string;
+  secondary?: string;
+  value?: number; // optional trailing number (e.g. SCU)
+  barPct?: number; // optional 0-100 fill for a proportional bar
+};
 
 export default function SearchableSheet({
   label,
@@ -153,10 +159,27 @@ export default function SearchableSheet({
                         isSelected ? "border-accent text-accent" : "border-transparent"
                       }`}
                     >
-                      <span className="text-sm">{o.primary}</span>
-                      {o.secondary && (
-                        <span className="text-xs text-text-muted">{o.secondary}</span>
-                      )}
+                      <div className="w-full flex flex-col gap-0.5">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-sm">{o.primary}</span>
+                          {o.value !== undefined && (
+                            <span className="text-sm font-bold tabular-nums text-accent shrink-0">
+                              {o.value.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        {o.secondary && (
+                          <span className="text-xs text-text-muted">{o.secondary}</span>
+                        )}
+                        {o.barPct !== undefined && (
+                          <div className="h-1 rounded-full bg-border overflow-hidden mt-1">
+                            <div
+                              className="h-full rounded-full bg-accent"
+                              style={{ width: `${o.barPct}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </button>
                   );
                 })
