@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { Vehicle } from "@/lib/uex";
+import SearchableSheet, { type SheetOption } from "@/app/SearchableSheet";
 
 export default function ShipPicker({
   vehicles,
@@ -27,6 +28,13 @@ export default function ShipPicker({
 
   const maxScu = cargoShips[0]?.scu ?? 1;
 
+  const shipOptions: SheetOption[] = cargoShips.map((v) => ({
+    id: v.id,
+    primary: v.name,
+    value: v.scu,
+    barPct: Math.round((v.scu / maxScu) * 100),
+  }));
+
   function selectShip(id: number) {
     const autoLoadBuyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
     const autoLoadSellPart = autoLoadSell ? "&autoLoadSell=1" : "";
@@ -34,46 +42,27 @@ export default function ShipPicker({
     router.push(`?ship=${id}&systems=${currentSystems.join(",")}${autoLoadBuyPart}${autoLoadSellPart}${originPart}`);
   }
 
+  function handleSelect(id: number | undefined) {
+    if (id === undefined) {
+      const autoLoadBuyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
+      const autoLoadSellPart = autoLoadSell ? "&autoLoadSell=1" : "";
+      const originPart = selectedOrigin !== undefined ? `&origin=${selectedOrigin}` : "";
+      router.push(`?systems=${currentSystems.join(",")}${autoLoadBuyPart}${autoLoadSellPart}${originPart}`);
+      return;
+    }
+    selectShip(id);
+  }
+
   return (
     <div className="mb-6">
-      {selectedShipId === undefined && (
-        <p className="text-sm text-text-muted mb-3">Select a ship to see runnable routes</p>
-      )}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-        {cargoShips.map((vehicle) => {
-          const isSelected = vehicle.id === selectedShipId;
-          const barPct = Math.round((vehicle.scu / maxScu) * 100);
-          return (
-            <button
-              key={vehicle.id}
-              onClick={() => selectShip(vehicle.id)}
-              className={`rounded border p-3 text-left transition-colors ${
-                isSelected
-                  ? "border-accent bg-bg-card"
-                  : "border-border bg-bg-card hover:border-accent"
-              }`}
-            >
-              <div className="flex justify-between items-baseline gap-1 mb-2">
-                <span
-                  className={`text-sm font-medium leading-tight ${isSelected ? "text-accent" : "text-text-muted"}`}
-                >
-                  {vehicle.name}
-                </span>
-                <span className="text-base font-bold tabular-nums text-accent shrink-0">
-                  {vehicle.scu}
-                </span>
-              </div>
-              <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{ width: `${barPct}%` }}
-                />
-              </div>
-              <div className="mt-1 text-xs text-text-muted">SCU</div>
-            </button>
-          );
-        })}
-      </div>
+      <SearchableSheet
+        label="Ship"
+        options={shipOptions}
+        selectedId={selectedShipId}
+        placeholderPrimary="Select a ship"
+        allOptionLabel="No ship selected"
+        onSelect={handleSelect}
+      />
     </div>
   );
 }
