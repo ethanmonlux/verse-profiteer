@@ -40,7 +40,12 @@ export default async function Home({
         allowedSystems.includes(t.star_system_name) &&
         originIds.has(t.id)
     )
-    .map((t) => ({ id: t.id, name: t.name }))
+    .map((t) => ({
+      id: t.id,
+      name: t.name,
+      system: t.star_system_name,
+      location: t.planet_name ?? t.moon_name ?? t.outpost_name ?? null,
+    }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const shipId = shipParam !== undefined ? parseInt(shipParam, 10) : NaN;
