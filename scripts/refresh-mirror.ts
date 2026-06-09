@@ -1,6 +1,7 @@
 import { getDb, getPool } from "@/lib/db";
 import { pacedFanOut, upsertRoutes, upsertTerminals } from "@/lib/mirror";
 import { sql } from "drizzle-orm";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import {
   getCommodityPricesAll,
   getCommodityRoutes,
@@ -23,6 +24,16 @@ async function main(): Promise<void> {
     console.error(`[refresh-mirror] probe: db connection FAILED after ${Date.now() - probeStart}ms`, err);
     throw err;
   }
+
+  // Apply any pending migrations from ./drizzle before touching tables. The
+  // committed migration SQL is the source of truth; this is the programmatic
+  // equivalent of `drizzle-kit migrate`, run through the worker's pool. It is
+  // idempotent — drizzle tracks applied migrations, so it is a no-op once they
+  // have been applied.
+  console.log("[refresh-mirror] migrate: applying pending migrations...");
+  const migrateStart = Date.now();
+  await migrate(db, { migrationsFolder: "./drizzle" });
+  console.log(`[refresh-mirror] migrate: done (${Date.now() - migrateStart}ms)`);
 
   // Terminals first: cheap, a single bulk call.
   const terminals = await getTerminals();
