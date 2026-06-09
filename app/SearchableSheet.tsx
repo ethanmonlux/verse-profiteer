@@ -89,9 +89,8 @@ export default function SearchableSheet({
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/60" onClick={close} />
           <div
-            className="relative bg-bg-card rounded-t-lg flex flex-col overflow-hidden"
+            className="relative bg-bg-card rounded-t-lg flex flex-col overflow-hidden max-h-[85svh]"
             style={{
-              maxHeight: "80vh",
               animation: reducedMotion ? undefined : "slideUp 0.2s ease-out",
             }}
           >
@@ -116,7 +115,7 @@ export default function SearchableSheet({
                 className="w-full bg-bg-card border border-border rounded text-sm px-3 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
               />
             </div>
-            <div className="overflow-y-auto flex-1">
+            <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain">
               <button
                 type="button"
                 onClick={() => handleSelect(undefined)}
