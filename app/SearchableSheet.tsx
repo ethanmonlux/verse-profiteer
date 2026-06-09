@@ -89,12 +89,15 @@ export default function SearchableSheet({
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/60" onClick={close} />
           <div
-            className="relative bg-bg-card rounded-t-lg flex flex-col overflow-hidden max-h-[85svh]"
+            className="relative bg-bg-card rounded-t-2xl flex flex-col overflow-hidden h-[90svh]"
             style={{
               animation: reducedMotion ? undefined : "slideUp 0.2s ease-out",
             }}
           >
-            <div className="flex-none bg-bg-card border-b border-border p-3">
+            <div className="flex-none flex justify-center pt-2 pb-1">
+              <div className="h-1 w-9 rounded-full bg-border" />
+            </div>
+            <div className="flex-none bg-bg-card border-b border-border px-3 pb-3 pt-1">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">{label}</span>
                 <button
@@ -119,7 +122,7 @@ export default function SearchableSheet({
               <button
                 type="button"
                 onClick={() => handleSelect(undefined)}
-                className={`w-full text-left px-4 min-h-11 flex items-center border-l-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+                className={`w-full text-left px-4 py-2.5 min-h-11 flex items-center border-l-2 border-b border-b-border/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
                   selectedId === undefined
                     ? "border-accent text-accent"
                     : "border-transparent text-text-muted"
@@ -139,7 +142,7 @@ export default function SearchableSheet({
                       key={o.id}
                       type="button"
                       onClick={() => handleSelect(o.id)}
-                      className={`w-full text-left px-4 py-2 min-h-11 flex flex-col justify-center border-l-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+                      className={`w-full text-left px-4 py-2.5 min-h-11 flex flex-col justify-center border-l-2 border-b border-b-border/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
                         isSelected ? "border-accent text-accent" : "border-transparent"
                       }`}
                     >
