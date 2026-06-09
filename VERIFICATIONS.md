@@ -11,6 +11,12 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
+VF — Mirror refresh cron phase offset (escalation-gated, state-sensitive cadence)
+- Change: Railway worker cron schedule shifted from on-the-quarter-hour (fires :00/:15/:30/:45, ~1 min BEFORE UEX publishes its recompute) to a few minutes past (:04/:19/:34/:49, cron "4,19,34,49 * * * *"), so each refresh lands AFTER UEX's observed :01/:16/:31/:46 publish grid instead of catching the previous cycle. Made in the Railway dashboard, not in repo source.
+- Rationale: D8 observed UEX publishing route recomputes ~1 min past each quarter-hour over a 4-hour sample; firing on the quarter-hour means consistently grabbing the prior (≈15-min-staler) cycle. A forgiving offset (~3-4 min, NOT a 30s chase) captures the fresh recompute while tolerating publish-time jitter.
+- How to verify: after the schedule change, check 2-3 consecutive worker runs' logs — confirm the routes pulled carry a newestRouteAdded stamp from the CURRENT quarter-hour grid (e.g. a :04 run sees the :01 recompute), not the previous one. Confirm no run lands before publish (would show the prior cycle).
+- Result: (pending — schedule change + log check)
+
 VF — Staleness-display label (per-route price-leg data age)  [Pending]
 - Change: card label switched from "Updated {date_added} ago" (route-row creation time) to "prices last seen {N}" / "price age unknown", computed in getTopRoutes as the older of the two price legs' date_modified (dataAgeUnix on RouteWithAutoLoad), null when either leg is missing from the prices feed. State-sensitive (staleness display).
 - How to verify: on the production board, pick a headline route. In a second tab, query commodities_prices_all and find the buy-terminal and sell-terminal price records for that commodity. Read each record's date_modified. Confirm the card's "prices last seen {N}" matches relativeAge of the OLDER (smaller) of the two date_modified values. Then find (or force, via a route whose terminal has no price record) a missing-leg case and confirm the card reads "price age unknown", not a number. Confirm the warning color shows when the age exceeds the 30-day stale threshold.
