@@ -22,6 +22,12 @@ VF — Staleness-display label (per-route price-leg data age)  [Pending]
 - How to verify: on the production board, pick a headline route. In a second tab, query commodities_prices_all and find the buy-terminal and sell-terminal price records for that commodity. Read each record's date_modified. Confirm the card's "prices last seen {N}" matches relativeAge of the OLDER (smaller) of the two date_modified values. Then find (or force, via a route whose terminal has no price record) a missing-leg case and confirm the card reads "price age unknown", not a number. Confirm the warning color shows when the age exceeds the 30-day stale threshold.
 - Result: (pending run)
 
+VF — Location-origin filter (ranking-input)
+- Change: getTopRoutes originTerminal filters routes to id_terminal_origin === origin; origin picker populated only from getDistinctOriginTerminalIds() intersected with the selected systems. URL param &origin.
+- How to verify: on the deploy, select a terminal in the Origin picker → confirm every card's route departs that terminal; clear (All origins) → full board returns. Confirm the picker no longer lists non-trading kiosks. Switch systems / change ship → confirm origin and all other filters persist in the URL (no silent drops).
+- KNOWN LIMITATION (not a bug, note only): getDistinctOriginTerminalIds returns origins across the whole mirror, not scoped to ship capacity or auto-load filters. A terminal can appear in the picker but yield an empty board if its only routes are filtered out by auto-load or a small ship. Acceptable for v1; revisit if it bites.
+- Result: (pending run)
+
 ## Pending — Calibration Runs
 
 These exist for the life of the tool — they don’t “complete” once and disappear. They re-open whenever the tool consistently misranks or a major SC patch ships.

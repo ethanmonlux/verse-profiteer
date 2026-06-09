@@ -14,7 +14,6 @@ New items in priority order. Completed items move to the bottom, organized by or
 ## Major
 
 - Migrate /api/verify from getCommodityRoutes (live UEX) to the mirror source, so the `{ }` raw debug button verifies the same data the board ranks from. It currently reads live UEX and shows spurious mismatches against the mirror-fed board on every spot-check.
-- Staleness-display beat — replace the card "Updated Nm ago" label (currently mirror-refresh age, which understates true data age) with per-route data age derived from price-leg date_modified (use the older of the origin and destination legs). State-sensitive (user-facing freshness claim); requires escalation flow. Today's data (median price age ~1.2 days) makes this the primary accuracy lever.
 
 ### RATIFIED ARCHITECTURE — see DECISIONS.md (2026-06-03)
 
@@ -69,6 +68,9 @@ Goal: a newer player can pick a route and execute it end-to-end without getting 
 
 ## Minor
 
+- Mobile polish pass for the pickers (SearchableSheet) — fresh-eyes review on a phone. Component is functional (browse + search + capacity bars, keyboard handled) but feels rough on mobile: re-evaluate sheet height (90svh may be too tall / hides board context), row spacing and tap feel, trigger-button affordance (collapsed ship grid into a sheet trigger — confirm the "select a ship" empty state still reads as step one), open/close animation. Presentation-only; do as one scoped pass, not a spiral.
+- Deadhead toggle for location-origin routing (#1b): "fly empty to the best nearby pickup" — needs inter-terminal distance/time, so it leans on travel-time constants (uncalibrated). Deferred until calibration.
+- Demand-cap age (#1c): the card already shows "pick up N · M available"; surface the AGE of that demand number (reuse dataAgeUnix) so a stale bottleneck reads as risk, not fact. Claim-adjacent — its own small beat.
 - Confirm the UEX publish offset holds beyond the single 4-hour D8 sample (overnight + peak + post-patch) BEFORE tightening the cron offset any further. The :01/:16/:31/:46 grid is an n=1-window hypothesis; the current ~3-4 min offset is deliberately forgiving. Do not chase a 30s/sub-minute offset until a longer probe sample confirms the publish grid is stable — a tight chase will re-introduce the land-before-publish problem if UEX's publish time drifts. (Reuse the paused cadence probe for a longer window before tearing it down.)
 - Conditional/delta refresh — DROPPED 2026-06-07, NOT WORTH BUILDING. Overnight probe (see DECISIONS D2 CORRECTED) shows UEX produces nothing fresher than its ~15-min recompute floor, so the 15-min fixed cron already captures essentially all available freshness; selective delta re-fetch would add complexity for zero freshness gain (UEX recompute is the binding ceiling, as anticipated).
 - Conditional refresh optimization: worker currently re-upserts all rows every 30 min regardless of change. Future: skip upsert for rows whose date_modified has not advanced. Note this cuts DB write load but NOT UEX call load (still must fetch to compare), so cap math is unchanged — value is write/IO reduction, not rate-limit relief. Not urgent.
@@ -145,6 +147,7 @@ Goal: a newer player can pick a route and execute it end-to-end without getting 
 
 ### Major
 
+- Staleness-display beat — DONE 2026-06-08. Card label replaced "Updated Nm ago" (mirror-refresh age) with per-route price-leg data age ("prices last seen {N}" / "price age unknown"), computed as the older of the two price legs' date_modified (dataAgeUnix on RouteWithAutoLoad, derived-on-read). State-sensitive — VERIFICATIONS Pending entry owed (see CHANGELOG 2026-06-08).
 - Read-path migration / shortlist dissolution (D3) — DONE 2026-06-07. Route ranking reads from routes_mirror via lib/routesRepo.ts (getAllMirroredRoutes) instead of the live UEX per-commodity fan-out; the top-35 margin shortlist is removed, so ranking sees every commodity and the shortlist metric-mismatch bug class is gone. Verified on production (Aluminum card reconciled to the credit — see VERIFICATIONS.md). NOTE: the container_sizes intersection capacity math and out-of-stock/availability confidence work from the capacity-aware ranking item SURVIVE this — they are independent of the candidate-pool source; do not treat them as closed.
 - Card information hierarchy redesign — card headline shows primary route's realizable profit (capacity-aware); per-route realizable shown only when expanded (fixes double-count on collapsed cards); per-row qualifier contextual on capacity; total profit demoted behind expand; per-SCU on secondary line. Profit-per-hour removed from card (deferred to loop planner; lib/profitPerHour.ts retained on disk). Shipped + verified in production 2026-06-01.
 - Ship-capacity scaling — lib/realizableProfit.ts shipped; realizable = profitPerScu × min(capacity, scu_origin, scu_destination), three-way min, cap indicator, ≤-total-profit invariant unit-tested. Global in-memory capacity input; board split into server (fetch/rank) + client (app/Board.tsx, capacity state). Display-only, ranking unchanged. State-sensitive — verification PENDING (see VERIFICATIONS.md).
