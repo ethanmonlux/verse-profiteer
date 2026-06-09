@@ -1,5 +1,5 @@
 import { getTopRoutes } from "@/lib/routes";
-import { getVehicles } from "@/lib/uex";
+import { getVehicles, getTerminals } from "@/lib/uex";
 import DebugPrices from "@/app/DebugPrices";
 import DebugQt from "@/app/DebugQt";
 import DebugTerminals from "@/app/DebugTerminals";
@@ -7,6 +7,7 @@ import Board from "@/app/Board";
 import ShipPicker from "@/app/ShipPicker";
 import SystemsPicker from "@/app/SystemsPicker";
 import AutoLoadToggle from "@/app/AutoLoadToggle";
+import OriginPicker from "@/app/OriginPicker";
 
 export default async function Home({
   searchParams,
@@ -24,10 +25,15 @@ export default async function Home({
   const autoLoadBuy = params.autoLoadBuy === "1";
   const autoLoadSell = params.autoLoadSell === "1";
 
-  const vehicles = await getVehicles();
+  const [vehicles, terminals] = await Promise.all([getVehicles(), getTerminals()]);
   const allowedSystems = systemsParam
     ? systemsParam.split(",").filter((s) => s.length > 0)
     : ["Stanton"];
+
+  const originTerminals = terminals
+    .filter((t) => t.star_system_name !== null && allowedSystems.includes(t.star_system_name))
+    .map((t) => ({ id: t.id, name: t.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const shipId = shipParam !== undefined ? parseInt(shipParam, 10) : NaN;
   const selectedVehicle =
@@ -52,12 +58,22 @@ export default async function Home({
         currentShipId={selectedVehicle?.id}
         autoLoadBuy={autoLoadBuy}
         autoLoadSell={autoLoadSell}
+        selectedOrigin={originTerminal}
+      />
+      <OriginPicker
+        terminals={originTerminals}
+        selectedOrigin={originTerminal}
+        selectedSystems={allowedSystems}
+        currentShipId={selectedVehicle?.id}
+        autoLoadBuy={autoLoadBuy}
+        autoLoadSell={autoLoadSell}
       />
       <AutoLoadToggle
         autoLoadBuy={autoLoadBuy}
         autoLoadSell={autoLoadSell}
         selectedSystems={allowedSystems}
         currentShipId={selectedVehicle?.id}
+        selectedOrigin={originTerminal}
       />
       <ShipPicker
         vehicles={vehicles}
@@ -65,6 +81,7 @@ export default async function Home({
         currentSystems={allowedSystems}
         autoLoadBuy={autoLoadBuy}
         autoLoadSell={autoLoadSell}
+        selectedOrigin={originTerminal}
       />
       {groups !== null && selectedVehicle !== undefined && (
         <Board groups={groups} capacity={selectedVehicle.scu} />
