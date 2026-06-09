@@ -17,11 +17,11 @@ New items in priority order. Completed items move to the bottom, organized by or
 
 ### RATIFIED ARCHITECTURE — see DECISIONS.md (2026-06-03)
 
-The persistence + full-mirror decisions (D1/D2/D3 + Spine Rule) are now ratified and sit ARCHITECTURALLY UPSTREAM of the v1 ranking work below. Build order: schema design → provision Postgres host (Railway default, not formally chosen) → migration → mirror refresh job → spine types → route-stacking as first consumer.
+The persistence + full-mirror decisions (D1/D2/D3 + Spine Rule) are now ratified and sit ARCHITECTURALLY UPSTREAM of the v1 ranking work below. Build order: schema design → provision Postgres host (Railway default, not formally chosen) → migration → mirror refresh job → spine types → route-stacking as first consumer.  **(schema design + migration DONE 2026-06-09 — D10/D11; migrations now auto-apply on worker startup. Next: spine types + async accessor.)**
 
 - **UEX mirror (NEW, foundational).** Mirror commodities_routes (paced fan-out, ~30-min blind poll — no date_modified on rows, probe-confirmed 2026-06-03), terminals, and prices into Postgres. Hybrid schema: typed+indexed columns on ranking/filter INPUTS, JSONB `raw` for the verbatim feed object, `refreshed_at` per row. Probe expanded the typed-column list beyond the original plan — add scu_reachable, status_origin/destination, container_sizes_origin/destination, game_version_origin/destination as typed columns (all confirmed on the route row). Ranking-math-class → REVIEW+VERIFY, spot-check a mirror row vs live UEX. Refresh cadence is caching-TTL-class → escalate before prompting.
-- **Spine types (NEW).** Plan/Leg/Item per the Spine Rule (CLAUDE.md). Inputs+observations stored, all profit/distance/duration derived on read. Async DB accessor from day one (near-locked recommendation — sync→async later touches every call site). Exact lib/ paths TBD at schema design.
-- **STILL UNDECIDED at schema design:** exact lib/ paths for spine types and the planStore/DB accessor; Postgres host (Railway default); route-stacking composition algorithm (manifest = bounded knapsack, loop = pathfinding — its own design beat after persistence).
+- **Spine types (NEW).** Plan/Leg/Item per the Spine Rule (CLAUDE.md). Inputs+observations stored, all profit/distance/duration derived on read. Async DB accessor from day one (near-locked recommendation — sync→async later touches every call site). Schema LOCKED (D10); the four tables + migration are shipped. ACTIVE NEXT BEAT: the async accessor (lib path TBD — propose at build) over plans/legs/items/price_observations, CRUD only, no derived math (that's a following beat).
+- **STILL UNDECIDED:** exact lib/ path for the spine accessor (propose at build); route-stacking composition algorithm (manifest = bounded knapsack, loop = pathfinding — its own design beat after persistence). (Schema shape and Postgres host are now settled — D10 / D4.)
 
 ---
 

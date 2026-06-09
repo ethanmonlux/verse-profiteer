@@ -37,6 +37,9 @@ These exist for the life of the tool — they don’t “complete” once and di
 
 ## Completed — Code Verifications
 
+VF — Worker auto-migrate on startup (D11)  [Completed 2026-06-09]
+- Verified after merge: a real worker run logged "migrate: applying pending migrations" then "migrate: done", completed its normal terminals/routes upsert, and the four spine tables (plans, legs, items, price_observations) plus __drizzle_migrations are present in the Railway Postgres (tables empty, as expected — nothing writes to the spine yet). Confirms the committed 0001 migration applied through the worker pool. Result: PASS.
+
 VF — Read-path migration (route ranking reads from routes_mirror)  [Completed 2026-06-07]
 - Verified on production (Vercel) 2026-06-07. Method: hand-reconciled the Aluminum card at ship=230, autoLoadBuy=1, autoLoadSell=1, Stanton. Top route Admin-Seraphim → Admin-Port Tressler: perSCU 1,315 (sell 4,600 − buy 3,285) × haul 1,874 SCU (ship-capacity bound) = realizable 2,464,310, matching the card headline exactly. Second/third routes (Everus Harbor 815/SCU; Area 18 515/SCU) also reconciled. Confirmed the board ranks across all commodities from routes_mirror with no top-35 shortlist. Result: PASS.
 

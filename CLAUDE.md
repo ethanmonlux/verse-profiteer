@@ -19,11 +19,19 @@ Persistence (ratified, see DECISIONS.md D1): operator data — saved plans, flig
 - Mirror writes go only through `lib/mirror.ts`; the worker is the only caller that writes to the mirror.
 - The mirror refresh worker connects via the Railway PUBLIC `DATABASE_URL` with Pool SSL (`rejectUnauthorized: false`). Do not switch the worker to the internal host without re-testing — internal networking has failed with ETIMEDOUT (see DECISIONS.md D5).
 - Inserts are chunked (100/statement). The worker keeps a `select 1` startup probe to distinguish infra failures from code failures.
-- Mirror tables hold regenerable UEX cache; the Postgres instance can be deleted/recreated with zero data loss (re-run `db:migrate`, repoint worker `DATABASE_URL`).
+- Mirror tables hold regenerable UEX cache; the Postgres instance can be deleted/recreated with zero data loss (migrations re-apply automatically on the next worker run; repoint worker `DATABASE_URL`).
 
 ## Spine Rule
 
 The Plan/Leg/Item type (see DECISIONS.md / TRANSFER.md) is a ratified architectural fixture: the shared spine for route-stacking, the cargo ledger, and the live re-router. The spine stores INPUTS and OBSERVATIONS only. Every profit, distance, and duration number is DERIVED ON READ, never persisted. Two sources of truth for one number is the exact "wrong number, lost trust" failure this rule prevents. The ledger stores actual prices/scu (observations, not derivable); profit from them is still computed, never stored. Loop-closure is derived, never a stored flag.
+
+### Spine Tables (DECISIONS D10)
+Four tables in `lib/db/schema.ts`:
+- `plans` — a trip (draft/active/completed/abandoned): ship_capacity_scu (typed input now, ship-ref later), allowed_systems, start_terminal_id, tenant_id (default 'operator').
+- `legs` — D7's atom: a FIXED origin->destination pair + chosen cargo (id_commodity, null = deadhead) + source_activity (trade now; mining/salvage/refining later). NO status column — the ledger is the lock. A leg's destination is fixed; leftover cargo carried onward spawns a NEW leg, never mutates an existing one.
+- `items` — the actuals ledger: acquire/dispose movements (scu, unit_price, fee, terminal, disposition sale/dump/loss). Loop-agnostic; mined cargo is an acquire with null unit_price. Carry-state = sum acquire - sum dispose, derived.
+- `price_observations` — manual ground-truth sightings (D9): buy/sell price + scu_available at a terminal; supersede UEX when newer than its date_modified. source 'manual' now, 'ocr' later.
+Status/activity/disposition/source are plain `text` (app-validated), NOT pgEnum — keeps adding loops migration-free. Derived on read, never columns: carry-state, realized profit, per-leg profit, current position, locked-leg set, UEX estimate + estimate-vs-actual, effective ranking price, aUEC/hr / distance / duration.
 
 ## UEX Hygiene Rules
 
@@ -37,8 +45,9 @@ The Plan/Leg/Item type (see DECISIONS.md / TRANSFER.md) is a ratified architectu
 ## Persistence / Migrations
 
 - DB schema is defined in TypeScript at `lib/db/schema.ts`.
-- Schema changes flow: edit `lib/db/schema.ts` → `npm run db:generate` (writes SQL to `./drizzle`) → `npm run db:migrate` (applies to DB). Never `drizzle-kit push`.
-- CC never hand-edits files in `./drizzle` (generated SQL) and never runs `db:migrate` (operator applies migrations against the live DB by hand).
+- Schema changes flow: edit `lib/db/schema.ts` → `npm run db:generate` (writes SQL to `./drizzle`) → commit. The migration is APPLIED AUTOMATICALLY by the refresh worker on its next startup (it runs `migrate()` through the worker's pool before any table access — the programmatic equivalent of `db:migrate`, idempotent). Never `drizzle-kit push`. (Amends D4; see DECISIONS D11.)
+- CC never hand-edits files in `./drizzle` (generated SQL) and never runs migrate — migrations apply on the next worker run after merge.
+- DESTRUCTIVE migrations (DROP/ALTER on a table holding real data) are the exception: auto-apply removes the human gate, so for those, pause and apply/verify by hand before merging.
 - `DATABASE_URL` uses the Railway PUBLIC connection string in all environments (local `.env`, Vercel Production + Preview, Sensitive). Never the `.railway.internal` host.
 - Mirror tables are global UEX cache; `tenant_id` is spine-only.
 

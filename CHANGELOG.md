@@ -2,6 +2,11 @@
 
 Format: one entry per shipped version. Newest on top. CC never edits this in a code prompt — doc updates are a separate prompt after code is committed.
 
+## [2026-06-09]
+
+- Cargo-ledger spine schema shipped (migration 0001): four tables in lib/db/schema.ts — plans, legs, items, price_observations — implementing the Plan/Leg/Item model and D9's trip-being-flown frame. legs has no status column (the ledger is the lock); items is the actuals ledger (acquire/dispose), not a planned manifest; price_observations holds manual ground-truth sightings that supersede UEX when newer. All status/activity fields are plain text (not pgEnum) to keep adding money-loops migration-free. tenant_id defaulted 'operator'. No reads/writes yet — schema + tables only. See DECISIONS D10.
+- Worker auto-migrate: scripts/refresh-mirror.ts now runs migrate() through its pool on startup (after the probe, before table access), applying any pending ./drizzle migrations automatically and idempotently. Amends D4's manual-migrate workflow; sidesteps the missing-SSL gap in drizzle.config.ts. Verified — the four spine tables are present after a real worker run. See DECISIONS D11 and VERIFICATIONS.
+
 ## [2026-06-08]
 
 - /api/verify migrated to read the Postgres mirror (getMirroredRoutesByCommodity in lib/routesRepo.ts) instead of live UEX (getCommodityRoutes). The raw debug button now verifies against the same source the board ranks from, so spot-checks no longer show spurious mismatches. Test updated to mock the repo accessor; CI green.
