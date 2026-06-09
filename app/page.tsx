@@ -1,5 +1,6 @@
 import { getTopRoutes } from "@/lib/routes";
 import { getVehicles, getTerminals } from "@/lib/uex";
+import { getDistinctOriginTerminalIds } from "@/lib/routesRepo";
 import DebugPrices from "@/app/DebugPrices";
 import DebugQt from "@/app/DebugQt";
 import DebugTerminals from "@/app/DebugTerminals";
@@ -30,8 +31,15 @@ export default async function Home({
     ? systemsParam.split(",").filter((s) => s.length > 0)
     : ["Stanton"];
 
+  const originIds = new Set(await getDistinctOriginTerminalIds());
+
   const originTerminals = terminals
-    .filter((t) => t.star_system_name !== null && allowedSystems.includes(t.star_system_name))
+    .filter(
+      (t) =>
+        t.star_system_name !== null &&
+        allowedSystems.includes(t.star_system_name) &&
+        originIds.has(t.id)
+    )
     .map((t) => ({ id: t.id, name: t.name }))
     .sort((a, b) => a.name.localeCompare(b.name));
 

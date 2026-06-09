@@ -3,6 +3,14 @@ import { getDb } from "@/lib/db";
 import { routesMirror } from "@/lib/db/schema";
 import type { CommodityRoute } from "@/lib/uex";
 
+export async function getDistinctOriginTerminalIds(): Promise<number[]> {
+  const db = getDb();
+  const rows = await db
+    .selectDistinct({ id: routesMirror.idTerminalOrigin })
+    .from(routesMirror);
+  return rows.map((r) => r.id as number);
+}
+
 // Reads the full route set from the Postgres mirror. The `raw` jsonb column is
 // the exact original CommodityRoute object the live UEX path returned, so we
 // cast and return with no field mapping or reconstruction. Derive-on-read
