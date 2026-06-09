@@ -7,11 +7,13 @@ export default function AutoLoadToggle({
   autoLoadSell,
   selectedSystems,
   currentShipId,
+  selectedOrigin,
 }: {
   autoLoadBuy: boolean;
   autoLoadSell: boolean;
   selectedSystems: string[];
   currentShipId?: number;
+  selectedOrigin?: number;
 }) {
   const router = useRouter();
 
@@ -20,7 +22,8 @@ export default function AutoLoadToggle({
     const shipPart = currentShipId !== undefined ? `&ship=${currentShipId}` : "";
     const buyPart = autoLoadBuy ? "" : "&autoLoadBuy=1";
     const sellPart = autoLoadSell ? "&autoLoadSell=1" : "";
-    router.push(`?${systemsPart}${shipPart}${buyPart}${sellPart}`);
+    const originPart = selectedOrigin !== undefined ? `&origin=${selectedOrigin}` : "";
+    router.push(`?${systemsPart}${shipPart}${buyPart}${sellPart}${originPart}`);
   }
 
   function toggleSell() {
@@ -28,7 +31,8 @@ export default function AutoLoadToggle({
     const shipPart = currentShipId !== undefined ? `&ship=${currentShipId}` : "";
     const buyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
     const sellPart = autoLoadSell ? "" : "&autoLoadSell=1";
-    router.push(`?${systemsPart}${shipPart}${buyPart}${sellPart}`);
+    const originPart = selectedOrigin !== undefined ? `&origin=${selectedOrigin}` : "";
+    router.push(`?${systemsPart}${shipPart}${buyPart}${sellPart}${originPart}`);
   }
 
   return (

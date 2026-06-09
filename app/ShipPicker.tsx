@@ -9,12 +9,14 @@ export default function ShipPicker({
   currentSystems,
   autoLoadBuy,
   autoLoadSell,
+  selectedOrigin,
 }: {
   vehicles: Vehicle[];
   selectedShipId?: number;
   currentSystems: string[];
   autoLoadBuy: boolean;
   autoLoadSell: boolean;
+  selectedOrigin?: number;
 }) {
   const router = useRouter();
 
@@ -28,7 +30,8 @@ export default function ShipPicker({
   function selectShip(id: number) {
     const autoLoadBuyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
     const autoLoadSellPart = autoLoadSell ? "&autoLoadSell=1" : "";
-    router.push(`?ship=${id}&systems=${currentSystems.join(",")}${autoLoadBuyPart}${autoLoadSellPart}`);
+    const originPart = selectedOrigin !== undefined ? `&origin=${selectedOrigin}` : "";
+    router.push(`?ship=${id}&systems=${currentSystems.join(",")}${autoLoadBuyPart}${autoLoadSellPart}${originPart}`);
   }
 
   return (

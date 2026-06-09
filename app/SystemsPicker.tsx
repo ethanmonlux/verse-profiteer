@@ -9,11 +9,13 @@ export default function SystemsPicker({
   currentShipId,
   autoLoadBuy,
   autoLoadSell,
+  selectedOrigin,
 }: {
   selectedSystems: string[];
   currentShipId?: number;
   autoLoadBuy: boolean;
   autoLoadSell: boolean;
+  selectedOrigin?: number;
 }) {
   const router = useRouter();
 
@@ -25,7 +27,8 @@ export default function SystemsPicker({
     const shipPart = currentShipId !== undefined ? `&ship=${currentShipId}` : "";
     const autoLoadBuyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
     const autoLoadSellPart = autoLoadSell ? "&autoLoadSell=1" : "";
-    router.push(`?systems=${next.join(",")}${shipPart}${autoLoadBuyPart}${autoLoadSellPart}`);
+    const originPart = selectedOrigin !== undefined ? `&origin=${selectedOrigin}` : "";
+    router.push(`?systems=${next.join(",")}${shipPart}${autoLoadBuyPart}${autoLoadSellPart}${originPart}`);
   }
 
   return (
