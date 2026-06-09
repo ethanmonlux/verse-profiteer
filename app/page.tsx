@@ -16,6 +16,11 @@ export default async function Home({
   const params = await searchParams;
   const shipParam = typeof params.ship === "string" ? params.ship : undefined;
   const systemsParam = typeof params.systems === "string" ? params.systems : undefined;
+  const originParam = typeof params.origin === "string" ? params.origin : undefined;
+  const originTerminal =
+    originParam && Number.isFinite(Number(originParam))
+      ? Number(originParam)
+      : undefined;
   const autoLoadBuy = params.autoLoadBuy === "1";
   const autoLoadSell = params.autoLoadSell === "1";
 
@@ -30,7 +35,7 @@ export default async function Home({
 
   const groups =
     selectedVehicle !== undefined
-      ? await getTopRoutes({ allowedSystems, shipCapacity: selectedVehicle.scu, autoLoadBuy, autoLoadSell })
+      ? await getTopRoutes({ allowedSystems, shipCapacity: selectedVehicle.scu, autoLoadBuy, autoLoadSell, originTerminal })
       : null;
 
   return (

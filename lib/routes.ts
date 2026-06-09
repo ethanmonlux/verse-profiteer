@@ -29,6 +29,7 @@ export async function getTopRoutes(opts: {
   shipCapacity: number;
   autoLoadBuy?: boolean;
   autoLoadSell?: boolean;
+  originTerminal?: number;
 }): Promise<CommodityRouteGroup[]> {
   const [prices, terminals] = await Promise.all([getCommodityPricesAll(), getTerminals()]);
   const autoLoadMap = new Map<number, number>();
@@ -68,7 +69,8 @@ export async function getTopRoutes(opts: {
         allowedSet.has(r.origin_star_system_name) &&
         allowedSet.has(r.destination_star_system_name) &&
         (!opts.autoLoadBuy || autoLoadMap.get(r.id_terminal_origin) === 1) &&
-        (!opts.autoLoadSell || autoLoadMap.get(r.id_terminal_destination) === 1)
+        (!opts.autoLoadSell || autoLoadMap.get(r.id_terminal_destination) === 1) &&
+        (opts.originTerminal === undefined || r.id_terminal_origin === opts.originTerminal)
     );
     if (runnable.length === 0) continue;
     const sorted = runnable
