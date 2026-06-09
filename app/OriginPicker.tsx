@@ -1,8 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import SearchableSheet from "@/app/SearchableSheet";
+import type { SheetOption } from "@/app/SearchableSheet";
 
-type TerminalOption = { id: number; name: string };
+type TerminalOption = {
+  id: number;
+  name: string;
+  system: string | null;
+  location: string | null;
+};
 
 export default function OriginPicker({
   terminals,
@@ -21,30 +28,35 @@ export default function OriginPicker({
 }) {
   const router = useRouter();
 
-  function selectOrigin(value: string) {
+  function selectOrigin(id: number | undefined) {
     const systemsPart = `?systems=${selectedSystems.join(",")}`;
     const shipPart = currentShipId !== undefined ? `&ship=${currentShipId}` : "";
     const autoLoadBuyPart = autoLoadBuy ? "&autoLoadBuy=1" : "";
     const autoLoadSellPart = autoLoadSell ? "&autoLoadSell=1" : "";
-    const originPart = value !== "" ? `&origin=${value}` : "";
+    const originPart = id !== undefined ? `&origin=${id}` : "";
     router.push(`${systemsPart}${shipPart}${autoLoadBuyPart}${autoLoadSellPart}${originPart}`);
   }
+
+  const options: SheetOption[] = terminals.map((t) => {
+    const parts = [t.system, t.location].filter((p): p is string => p !== null && p !== "");
+    return {
+      id: t.id,
+      primary: t.name,
+      secondary: parts.length > 0 ? parts.join(" · ") : undefined,
+    };
+  });
 
   return (
     <div className="flex items-center gap-2 mb-4">
       <span className="text-sm text-text-muted">Origin</span>
-      <select
-        value={selectedOrigin !== undefined ? String(selectedOrigin) : ""}
-        onChange={(e: { target: { value: string } }) => selectOrigin(e.target.value)}
-        className="rounded border border-border bg-bg-card text-sm text-text-muted px-3 py-1"
-      >
-        <option value="">All origins</option>
-        {terminals.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.name}
-          </option>
-        ))}
-      </select>
+      <SearchableSheet
+        label="Origin"
+        options={options}
+        selectedId={selectedOrigin}
+        placeholderPrimary="All origins"
+        allOptionLabel="All origins"
+        onSelect={selectOrigin}
+      />
     </div>
   );
 }
