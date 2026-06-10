@@ -50,6 +50,24 @@ type AggregateJson = {
   derived: DerivedView | null;
   derivedError: string | null;
 };
+type SuggestionJson = {
+  idCommodity: number;
+  idTerminalOrigin: number;
+  idTerminalDestination: number;
+  originTerminalName: string | null;
+  destinationTerminalName: string | null;
+  realizableProfit: number;
+  bottleneckScu: number;
+  haulableScu: number;
+  estimateMinutes: number;
+  aUecPerHrHint: number;
+};
+type SuggestResponse = {
+  originTerminalId: number | null;
+  heldCargo: { idCommodity: number; scu: number }[];
+  suggestions: SuggestionJson[];
+  blockedReason: string | null;
+};
 
 const inputClass =
   "w-full bg-bg-card border border-border rounded text-sm px-3 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
@@ -77,6 +95,11 @@ export default function PlanComposer({
   const [plansList, setPlansList] = useState<PlanJson[]>([]);
   const [active, setActive] = useState<AggregateJson | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Suggest-next-leg panel state. suggestData is the last response (or null
+  // before first fetch); suggestLoading toggles around the GET.
+  const [suggestData, setSuggestData] = useState<SuggestResponse | null>(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
 
   // Plan form fields. Systems fixed to ["Stanton"] for now — no picker.
   const [planTitle, setPlanTitle] = useState("");
@@ -140,6 +163,40 @@ export default function PlanComposer({
     }
     setError(null);
     return (await res.json()) as T;
+  }
+
+  // GET the next-leg suggestions for a plan. On !ok, surface the error and
+  // leave suggestData null; ranking/derivation all happens server-side.
+  async function fetchSuggestions(planId: number) {
+    setSuggestLoading(true);
+    try {
+      const res = await fetch(`/api/plans/${planId}/suggestions`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "failed to load suggestions");
+        setSuggestData(null);
+        return;
+      }
+      setError(null);
+      setSuggestData((await res.json()) as SuggestResponse);
+    } finally {
+      setSuggestLoading(false);
+    }
+  }
+
+  // Accept a suggestion: write it as a leg through the existing legs endpoint,
+  // then refresh the plan view and re-pull suggestions to reflect new state.
+  async function acceptSuggestion(s: SuggestionJson) {
+    if (active === null) return;
+    const leg = await postJson<LegJson>(`/api/plans/${active.plan.id}/legs`, {
+      idTerminalOrigin: s.idTerminalOrigin,
+      idTerminalDestination: s.idTerminalDestination,
+      idCommodity: s.idCommodity,
+      sourceActivity: "trade",
+    });
+    if (leg === null) return;
+    await refreshActive(active.plan.id);
+    await fetchSuggestions(active.plan.id);
   }
 
   async function submitPlan(e: React.FormEvent) {
@@ -332,6 +389,76 @@ export default function PlanComposer({
                       .join(", ")}
               </div>
             </div>
+          ) : null}
+        </section>
+      )}
+
+      {/* SUGGEST NEXT LEG */}
+      {active !== null && (
+        <section className={panelClass}>
+          <h2 className="text-lg font-semibold mb-3">Suggest next leg</h2>
+          <button
+            type="button"
+            onClick={() => fetchSuggestions(active.plan.id)}
+            disabled={suggestLoading}
+            className={`${buttonClass} mb-4`}
+          >
+            {suggestData !== null ? "Refresh suggestions" : "Suggest next leg"}
+          </button>
+
+          {suggestData === null && !suggestLoading ? (
+            <p className="text-sm text-text-muted">
+              Tap to get suggestions from your current position.
+            </p>
+          ) : null}
+
+          {suggestData !== null && suggestData.blockedReason !== null ? (
+            <div className="flex flex-col gap-1 text-sm">
+              <p className="text-text-muted">{suggestData.blockedReason}</p>
+              {suggestData.heldCargo.length > 0 ? (
+                <p className="text-text-muted">
+                  In hold:{" "}
+                  {suggestData.heldCargo
+                    .map((c) => `${c.scu} ${commodityName(c.idCommodity)}`)
+                    .join(", ")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {suggestData !== null && suggestData.blockedReason === null ? (
+            <ul className="flex flex-col gap-2">
+              {suggestData.suggestions.map((s) => (
+                <li
+                  key={`${s.idCommodity}-${s.idTerminalDestination}`}
+                  className={`${rowClass} flex flex-col gap-1`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span>
+                      {commodityName(s.idCommodity)} →{" "}
+                      {terminalName(s.idTerminalDestination)}
+                    </span>
+                    <span className={profitClass(s.realizableProfit)}>
+                      {fmtAuec(s.realizableProfit)}
+                    </span>
+                  </div>
+                  <div className="text-text-muted">~{s.haulableScu} SCU</div>
+                  <div className="text-xs text-text-muted">
+                    est ~{Math.round(s.estimateMinutes)} min · ~
+                    {Math.round(s.aUecPerHrHint).toLocaleString("en-US")} aUEC/hr
+                    (uncalibrated — ranking is by realizable profit, not this
+                    rate)
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => acceptSuggestion(s)}
+                    className="self-start rounded border border-border text-accent text-xs px-2 py-1 shrink-0"
+                  >
+                    Add leg
+                  </button>
+                </li>
+              ))}
+            </ul>
           ) : null}
         </section>
       )}
