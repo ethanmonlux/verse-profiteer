@@ -37,6 +37,10 @@ These exist for the life of the tool — they don’t “complete” once and di
 
 ## Completed — Code Verifications
 
+VF — Spine derive-on-read layer (Step 3, profit/carry math)  [Completed 2026-06-09]
+- lib/spineDerive.ts verified via lib/spineDerive.test.ts: 28 vitest cases with hand-computed expecteds, all green. Covered: weighted-avg cost basis with capitalized acquire fees (2762.5), per-leg profit on plan-wide basis (leg 101 = 2625, leg 102 = 1275), reconciliation (leg sum = plan total = 3900), mid-trip realized vs unrealized (2625 realized / 5525 unrealized with 2 SCU held), loss-at-cost-basis (-2900), and the corrupt-data throws (non-numeric price, dispose-without-acquisition, negative carry). Result: PASS.
+- NOTE: verifies the math in isolation. A real end-to-end manual verify (enter a known trip through /plan and confirm displayed numbers) is DEFERRED to the read-view beat, since the composer renders no derived numbers yet.
+
 VF — Worker auto-migrate on startup (D11)  [Completed 2026-06-09]
 - Verified after merge: a real worker run logged "migrate: applying pending migrations" then "migrate: done", completed its normal terminals/routes upsert, and the four spine tables (plans, legs, items, price_observations) plus __drizzle_migrations are present in the Railway Postgres (tables empty, as expected — nothing writes to the spine yet). Confirms the committed 0001 migration applied through the worker pool. Result: PASS.
 

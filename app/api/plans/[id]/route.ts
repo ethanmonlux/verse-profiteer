@@ -1,7 +1,9 @@
-// Spine read-path: aggregate plan fetch (plan + legs + items) — what the UI
-// re-fetches after each write. Returns raw stored rows only; all derivation
-// (carry, profit, position, locks) happens on read elsewhere, not here.
+// Spine read-path: aggregate plan fetch (plan + legs + items) plus the derived
+// view (carry, profit, position, locks) computed here via derivePlanView, which
+// never throws — on corrupt data it returns { view: null, error } so the raw
+// rows still serve and the bad entry can be seen and fixed.
 import { getPlan, listLegsByPlan, listItemsByPlan } from "@/lib/spineRepo";
+import { derivePlanView } from "@/lib/planView";
 
 export async function GET(
   request: Request,
@@ -23,7 +25,8 @@ export async function GET(
       listLegsByPlan(id),
       listItemsByPlan(id),
     ]);
-    return Response.json({ plan, legs, items });
+    const { view, error } = derivePlanView(plan, legs, items);
+    return Response.json({ plan, legs, items, derived: view, derivedError: error });
   } catch {
     return Response.json({ error: "failed to load plan" }, { status: 500 });
   }
