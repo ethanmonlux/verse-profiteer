@@ -37,6 +37,11 @@ These exist for the life of the tool — they don’t “complete” once and di
 
 ## Completed — Code Verifications
 
+VF — Spine read view, end-to-end on production (Step 5)  [Completed 2026-06-10]
+- Verified on the live /plan deploy with a real trip. Logged two acquires of Copper into one plan: 64 SCU at no price and 64 SCU at 3198 (fees 0). The Status panel showed In hold 128 Copper, Unrealized (held at cost) 204,672 aUEC, Realized 0, Position Admin - Port Tressler, and the leg flagged [LOCKED]. Reconciles by hand: weighted-avg cost = (64×0 + 64×3198) / 128 = 1,599/SCU; 128 × 1,599 = 204,672 — confirming the no-price acquire correctly averages in as 0 and the derive-on-read math is correct through the full server->client path. Result: PASS.
+- This is the end-to-end manual verify that was DEFERRED from Step 3 (see the note on the Step 3 derive VF entry below); that deferral is now closed.
+- NOT yet exercised in production: the over-sell resilience banner (dispose exceeding carry -> derivedError shown, page stays up). It is covered by lib/planView.test.ts resilience cases (green); a prod spot-check remains an optional follow-up.
+
 VF — Spine derive-on-read layer (Step 3, profit/carry math)  [Completed 2026-06-09]
 - lib/spineDerive.ts verified via lib/spineDerive.test.ts: 28 vitest cases with hand-computed expecteds, all green. Covered: weighted-avg cost basis with capitalized acquire fees (2762.5), per-leg profit on plan-wide basis (leg 101 = 2625, leg 102 = 1275), reconciliation (leg sum = plan total = 3900), mid-trip realized vs unrealized (2625 realized / 5525 unrealized with 2 SCU held), loss-at-cost-basis (-2900), and the corrupt-data throws (non-numeric price, dispose-without-acquisition, negative carry). Result: PASS.
 - NOTE: verifies the math in isolation. A real end-to-end manual verify (enter a known trip through /plan and confirm displayed numbers) is DEFERRED to the read-view beat, since the composer renders no derived numbers yet.
