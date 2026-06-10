@@ -2,6 +2,11 @@
 
 Format: one entry per shipped version. Newest on top. CC never edits this in a code prompt — doc updates are a separate prompt after code is committed.
 
+## [2026-06-10]
+
+- Spine read view shipped (the companion's first numbers): lib/planView.ts bundles the spineDerive functions into one PlanDerivedView and NEVER throws — on corrupt data it returns { view: null, error } so the raw rows still serve (a bad entry can be seen and fixed, not 500 the page). GET /api/plans/[id] now derives server-side (where occurredAt is a real Date) and returns { plan, legs, items, derived, derivedError }. app/PlanComposer.tsx renders a Status panel (current position, realized profit in profit/loss colors, unrealized-at-cost, in-hold carry) and per-leg profit with [LOCKED] / dimmed-flown badges; a warning banner replaces the numbers when derivedError is set. First spine surface showing money — realized accounting of entered data, not a forward-looking claim. See VERIFICATIONS.
+- Board card legibility: route cards now carry aUEC units — buy/sell prices as "aUEC/SCU", the per-SCU margin labeled "P/L … aUEC/SCU", and the headline + expanded realizable figures suffixed "aUEC". Display-only; no ranking or math change.
+
 ## [2026-06-09]
 
 - Cargo-ledger spine schema shipped (migration 0001): four tables in lib/db/schema.ts — plans, legs, items, price_observations — implementing the Plan/Leg/Item model and D9's trip-being-flown frame. legs has no status column (the ledger is the lock); items is the actuals ledger (acquire/dispose), not a planned manifest; price_observations holds manual ground-truth sightings that supersede UEX when newer. All status/activity fields are plain text (not pgEnum) to keep adding money-loops migration-free. tenant_id defaulted 'operator'. No reads/writes yet — schema + tables only. See DECISIONS D10.
