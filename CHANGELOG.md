@@ -6,6 +6,7 @@ Format: one entry per shipped version. Newest on top. CC never edits this in a c
 
 - Cargo-ledger spine schema shipped (migration 0001): four tables in lib/db/schema.ts — plans, legs, items, price_observations — implementing the Plan/Leg/Item model and D9's trip-being-flown frame. legs has no status column (the ledger is the lock); items is the actuals ledger (acquire/dispose), not a planned manifest; price_observations holds manual ground-truth sightings that supersede UEX when newer. All status/activity fields are plain text (not pgEnum) to keep adding money-loops migration-free. tenant_id defaulted 'operator'. No reads/writes yet — schema + tables only. See DECISIONS D10.
 - Worker auto-migrate: scripts/refresh-mirror.ts now runs migrate() through its pool on startup (after the probe, before table access), applying any pending ./drizzle migrations automatically and idempotently. Amends D4's manual-migrate workflow; sidesteps the missing-SSL gap in drizzle.config.ts. Verified — the four spine tables are present after a real worker run. See DECISIONS D11 and VERIFICATIONS.
+- Spine accessor shipped: lib/spineRepo.ts — thin async CRUD over plans/legs/items/price_observations, modeled on routesRepo.ts. Re-exports Drizzle inferred types (Plan/Leg/Item/PriceObservation + New* insert types) as the single source of truth. Reads/returns rows verbatim — no derived math (carry-state/profit/etc. are a later read-time beat), no deletes (plan->legs/items cascade handles teardown). numeric columns return as string and are not coerced here.
 
 ## [2026-06-08]
 
