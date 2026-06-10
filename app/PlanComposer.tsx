@@ -33,7 +33,23 @@ type ItemJson = {
   fee: string | null;
   idTerminal: number | null;
 };
-type AggregateJson = { plan: PlanJson; legs: LegJson[]; items: ItemJson[] };
+type CarryLine = { idCommodity: number; scu: number };
+type DerivedView = {
+  carry: CarryLine[];
+  unrealizedInventoryValue: number;
+  planRealizedProfit: number;
+  legProfits: { legId: number; profit: number }[];
+  currentPositionTerminalId: number | null;
+  executedLegIds: number[];
+  lockedLegIds: number[];
+};
+type AggregateJson = {
+  plan: PlanJson;
+  legs: LegJson[];
+  items: ItemJson[];
+  derived: DerivedView | null;
+  derivedError: string | null;
+};
 
 const inputClass =
   "w-full bg-bg-card border border-border rounded text-sm px-3 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
@@ -41,6 +57,8 @@ const buttonClass =
   "w-full rounded border border-border bg-bg-card text-accent text-sm px-3 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 const panelClass = "bg-bg-card border border-border rounded-lg p-4";
 const rowClass = "border border-border rounded px-3 py-2 text-sm";
+const fmtAuec = (n: number) => `${Math.round(n).toLocaleString("en-US")} aUEC`;
+const profitClass = (n: number) => (n < 0 ? "text-loss" : "text-profit");
 
 export default function PlanComposer({
   terminalOptions,
@@ -278,6 +296,46 @@ export default function PlanComposer({
         </ul>
       </section>
 
+      {/* STATUS (derived) */}
+      {active !== null && (
+        <section className={panelClass}>
+          <h2 className="text-lg font-semibold mb-3">Status</h2>
+          {active.derivedError !== null ? (
+            <p className="border border-warning text-warning rounded px-3 py-2 text-sm">
+              Can&apos;t compute totals: {active.derivedError}. Raw rows are still
+              shown below — fix the flagged entry.
+            </p>
+          ) : active.derived !== null ? (
+            <div className="flex flex-col gap-2 text-sm">
+              <div>
+                <span className="text-text-muted">Position: </span>
+                {active.derived.currentPositionTerminalId === null
+                  ? "—"
+                  : terminalName(active.derived.currentPositionTerminalId)}
+              </div>
+              <div>
+                <span className="text-text-muted">Realized profit: </span>
+                <span className={profitClass(active.derived.planRealizedProfit)}>
+                  {fmtAuec(active.derived.planRealizedProfit)}
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">Unrealized (held at cost): </span>
+                {fmtAuec(active.derived.unrealizedInventoryValue)}
+              </div>
+              <div>
+                <span className="text-text-muted">In hold: </span>
+                {active.derived.carry.length === 0
+                  ? "empty"
+                  : active.derived.carry
+                      .map((c) => `${c.scu} ${commodityName(c.idCommodity)}`)
+                      .join(", ")}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      )}
+
       {/* LEGS */}
       {active !== null && (
         <section className={panelClass}>
@@ -337,17 +395,37 @@ export default function PlanComposer({
           </form>
 
           <ul className="flex flex-col gap-2">
-            {active.legs.map((leg) => (
-              <li key={leg.id} className={rowClass}>
-                <span className="text-text-muted">#{leg.seq}</span>{" "}
-                {terminalName(leg.idTerminalOrigin)} →{" "}
-                {terminalName(leg.idTerminalDestination)} ·{" "}
-                {leg.idCommodity === null
-                  ? "deadhead"
-                  : commodityName(leg.idCommodity)}{" "}
-                · {leg.sourceActivity}
-              </li>
-            ))}
+            {active.legs.map((leg) => {
+              const lp = active.derived?.legProfits.find(
+                (p) => p.legId === leg.id,
+              );
+              const locked =
+                active.derived?.lockedLegIds.includes(leg.id) ?? false;
+              const flown =
+                active.derived?.executedLegIds.includes(leg.id) ?? false;
+              return (
+                <li
+                  key={leg.id}
+                  className={`${rowClass}${flown ? " opacity-60" : ""}`}
+                >
+                  <span className="text-text-muted">#{leg.seq}</span>{" "}
+                  {terminalName(leg.idTerminalOrigin)} →{" "}
+                  {terminalName(leg.idTerminalDestination)} ·{" "}
+                  {leg.idCommodity === null
+                    ? "deadhead"
+                    : commodityName(leg.idCommodity)}{" "}
+                  · {leg.sourceActivity}
+                  {locked ? (
+                    <span className="ml-2 text-warning">[LOCKED]</span>
+                  ) : null}
+                  {lp ? (
+                    <span className={`ml-2 ${profitClass(lp.profit)}`}>
+                      {fmtAuec(lp.profit)}
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
