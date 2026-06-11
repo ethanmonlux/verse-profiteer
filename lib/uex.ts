@@ -62,24 +62,49 @@ export async function getCommodityRoutes(idCommodity: number): Promise<Commodity
     throw new Error("UEX not configured");
   }
 
-  const res = await fetch(`${base}/commodities_routes?id_commodity=${idCommodity}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    next: { revalidate: 300 },
-  });
+  const url = `${base}/commodities_routes?id_commodity=${idCommodity}`;
+  const headers = { Authorization: `Bearer ${token}` };
 
-  if (!res.ok) {
-    throw new Error(`UEX request failed: ${res.status}`);
+  // 30 s per-call timeout, 3 total attempts, 1 s/3 s backoff — operator-approved, escalation-gated.
+  const BACKOFFS_MS = [1_000, 3_000];
+
+  async function attempt(): Promise<CommodityRoute[]> {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(30_000),
+      headers,
+      next: { revalidate: 300 },
+    });
+
+    if (!res.ok) {
+      throw Object.assign(new Error(`UEX request failed: ${res.status}`), {
+        retryable: res.status >= 500,
+      });
+    }
+
+    const json = await res.json();
+
+    if (json.status !== "ok" || !Array.isArray(json.data)) {
+      throw Object.assign(new Error("UEX returned unexpected response"), { retryable: false });
+    }
+
+    return json.data as CommodityRoute[];
   }
 
-  const json = await res.json();
-
-  if (json.status !== "ok" || !Array.isArray(json.data)) {
-    throw new Error("UEX returned unexpected response");
+  let lastErr: unknown;
+  for (let i = 0; i <= BACKOFFS_MS.length; i++) {
+    try {
+      return await attempt();
+    } catch (err) {
+      lastErr = err;
+      const retryable =
+        !(err instanceof Error) ||
+        (err as Error & { retryable?: boolean }).retryable !== false;
+      if (!retryable || i === BACKOFFS_MS.length) throw err;
+      await new Promise<void>((r) => setTimeout(r, BACKOFFS_MS[i]));
+    }
   }
 
-  return json.data as CommodityRoute[];
+  throw lastErr;
 }
 
 export interface Category {
