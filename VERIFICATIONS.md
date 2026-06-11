@@ -11,6 +11,24 @@ When a verification passes, paste the date + outcome to the planning chat; it dr
 
 ## Pending — Code Verifications
 
+VF — Couch-chaining anchor logic (state-sensitive)  [Pending — BLOCKED: duplicate/stale-leg bug must be fixed first]
+- Change: suggestions anchor on the chain tail (last leg's destination) while no items are logged, else on ledger position (D7 RC1); MAX_CHAIN_HOPS=5 soft cap (informational, never blocks); panel shows "Suggesting from: {terminal}" and "chain N/5".
+- How to verify: board cross-check — with a plan that has no items logged, confirm the suggestion anchors on the last leg's destination; after logging an acquire item, confirm the anchor shifts to the ledger position. Reconcile one suggestion's realizable profit against the route board for the same origin + ship.
+- NOTE: beat is NOT done — bug "duplicate/stale legs" (see TODO) must be fixed first; do not run this verification until that bug is resolved.
+- Result: (pending — blocked on duplicate/stale-leg bug fix)
+
+VF — Worker fan-out resilience (state-sensitive, UEX integration)  [Pending]
+- Change: getCommodityRoutes now has a 30s per-call AbortSignal.timeout and up to 3 retry attempts (1s/3s backoff) retrying only network/5xx errors, not 4xx; pacedFanOut switched to Promise.allSettled returning {results, failures}; exceedsFailureThreshold (zero rows OR >10% failed) aborts the run loudly, otherwise logs a skip-summary and upserts what succeeded.
+- How to verify: observational — over several cron runs, confirm runs stay green (no UND_ERR_HEADERS_TIMEOUT crash) and that a transient timeout surfaces as a "fan-out: N/121 skipped" summary line in the worker log rather than a CRASHED run.
+- NOTE: lib/mirror.test.ts (pacedFanOut isolation + exceedsFailureThreshold unit tests) is NOT yet written and is owed before this verification is considered closed.
+- Result: (pending — observational, requires multiple cron runs; mirror test file not yet created)
+
+VF — Over-sell resilience banner (prod spot-check)  [Pending]
+- Change: dispose exceeding carry triggers derivedError, surfacing an error banner in PlanComposer while keeping the raw rows visible and the page up (not a 500).
+- How to verify: in the live /plan deploy, log a dispose item whose SCU exceeds accumulated acquire SCU for that commodity. Confirm the Status panel shows the error banner (derivedError set), the page does not 500, and raw rows remain visible.
+- NOTE: covered by lib/planView.test.ts resilience cases (all green); this entry tracks the prod spot-check only.
+- Result: (pending — prod spot-check not yet run)
+
 VF — Mirror refresh cron phase offset (escalation-gated, state-sensitive cadence)
 - Change: Railway worker cron schedule shifted from on-the-quarter-hour (fires :00/:15/:30/:45, ~1 min BEFORE UEX publishes its recompute) to a few minutes past (:04/:19/:34/:49, cron "4,19,34,49 * * * *"), so each refresh lands AFTER UEX's observed :01/:16/:31/:46 publish grid instead of catching the previous cycle. Made in the Railway dashboard, not in repo source.
 - Rationale: D8 observed UEX publishing route recomputes ~1 min past each quarter-hour over a 4-hour sample; firing on the quarter-hour means consistently grabbing the prior (≈15-min-staler) cycle. A forgiving offset (~3-4 min, NOT a 30s chase) captures the fresh recompute while tolerating publish-time jitter.
