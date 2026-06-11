@@ -2,6 +2,13 @@
 
 Format: one entry per shipped version. Newest on top. CC never edits this in a code prompt — doc updates are a separate prompt after code is committed.
 
+## [2026-06-11]
+
+- Auto leg-generation (Scope A): lib/legSuggest.ts (+test), GET /api/plans/[id]/suggestions, and a "Suggest next leg" panel in PlanComposer. Candidates ranked by realizable profit; aUEC/hr shown as an uncalibrated display hint only (D7 RC3). No schema change; suggestions derive on read, and accepting a suggestion writes a leg via the existing /legs route.
+- Couch-chaining: suggestions anchor on the chain tail (last leg's destination) while no items are logged, else on ledger position (D7 RC1); soft hop cap MAX_CHAIN_HOPS=5 (informational, never blocks); panel shows "Suggesting from: {terminal}" and "chain N/5".
+- Worker resilience: getCommodityRoutes now has a 30s per-call AbortSignal.timeout and up to 3 retry attempts (1s/3s backoff) retrying only network/5xx errors, not 4xx; pacedFanOut switched to Promise.allSettled returning {results, failures}; exceedsFailureThreshold (zero rows OR >10% failed) aborts the run loudly, otherwise logs a skip-summary and upserts what succeeded. Fixes intermittent UND_ERR_HEADERS_TIMEOUT crashes where one slow UEX call killed the whole refresh.
+- Chore: collapsed per-row container_sizes warnings into one summary line.
+
 ## [2026-06-10]
 
 - Spine read view shipped (the companion's first numbers): lib/planView.ts bundles the spineDerive functions into one PlanDerivedView and NEVER throws — on corrupt data it returns { view: null, error } so the raw rows still serve (a bad entry can be seen and fixed, not 500 the page). GET /api/plans/[id] now derives server-side (where occurredAt is a real Date) and returns { plan, legs, items, derived, derivedError }. app/PlanComposer.tsx renders a Status panel (current position, realized profit in profit/loss colors, unrealized-at-cost, in-hold carry) and per-leg profit with [LOCKED] / dimmed-flown badges; a warning banner replaces the numbers when derivedError is set. First spine surface showing money — realized accounting of entered data, not a forward-looking claim. See VERIFICATIONS.

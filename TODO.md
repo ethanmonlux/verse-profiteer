@@ -14,6 +14,8 @@ New items in priority order. Completed items move to the bottom, organized by or
 ## Major
 
 - Migrate /api/verify from getCommodityRoutes (live UEX) to the mirror source, so the `{ }` raw debug button verifies the same data the board ranks from. It currently reads live UEX and shows spurious mismatches against the mirror-fed board on every spot-check.
+- **Duplicate/stale legs in couch-chaining** — acceptSuggestion leaves suggestion cards live during the sequential refresh, so rapid taps create identical or stale-origin legs. Anchor logic itself is correct. Fix: disable cards in-flight + clear list on accept; optional semantic dedupe (hide suggestions whose origin+dest+commodity already exist as a leg). Blocks couch-chaining "done" and its VERIFICATIONS Pending entry.
+- **Optimizer + workflow UI pivot (epic)** — replace greedy best-each-step with a bounded chain optimizer, wrapped in a workflow UI (set constraints → generate chain → fly → log actuals → re-route); demote raw Legs/Items panels to advanced/fallback. v1 contract: inputs = start, ship capacity, capital budget (= risk cap), stop count, optional return-to-start; objective = max total projected profit (calibration-free); per-leg output = buy cost, SCU to buy, projected profit, price age; chain output = total cost, total projected profit, worst-link freshness; constraints = capital, box-feasibility-where-known, supply reachability; flags = contraband, ship-feasibility where data allows; deferred to calibration = time budget and per-hour-as-sort; one open fork = single vs multi-commodity fill. D9 decomposes the capability ladder A→E (see Backlog).
 
 ### RATIFIED ARCHITECTURE — see DECISIONS.md (2026-06-03)
 
@@ -68,6 +70,8 @@ Goal: a newer player can pick a route and execute it end-to-end without getting 
 
 ## Minor
 
+- Delete draft plans — no DELETE route / deletePlan / UI exist; draft plans accumulate. Needs route + repo fn (cascade child legs/items) + Delete button with confirm.
+- Terminal picker lists all Stanton terminals — app/plan/page.tsx builds terminalOptions from all terminals; filter to terminals present in the price data (distinct id_terminal) so the picker doesn't offer kiosks with no routes.
 - Mobile polish pass for the pickers (SearchableSheet) — fresh-eyes review on a phone. Component is functional (browse + search + capacity bars, keyboard handled) but feels rough on mobile: re-evaluate sheet height (90svh may be too tall / hides board context), row spacing and tap feel, trigger-button affordance (collapsed ship grid into a sheet trigger — confirm the "select a ship" empty state still reads as step one), open/close animation. Presentation-only; do as one scoped pass, not a spiral.
 - Deadhead toggle for location-origin routing (#1b): "fly empty to the best nearby pickup" — needs inter-terminal distance/time, so it leans on travel-time constants (uncalibrated). Deferred until calibration.
 - Demand-cap age (#1c): the card already shows "pick up N · M available"; surface the AGE of that demand number (reuse dataAgeUnix) so a stale bottleneck reads as risk, not fact. Claim-adjacent — its own small beat.
@@ -125,6 +129,13 @@ Goal: a newer player can pick a route and execute it end-to-end without getting 
 - README with screenshots + setup instructions
 - LICENSE file
 
+## Backlog
+
+- D9 capability ladder (in order): manual price/qty observation entry + ranking supersession (capability 2; price_observations table exists but nothing writes/reads it); carry-aware partial-sell + buy-qty guidance (capability 3, the deferred held-cargo sell-routing, profits vs ledger COGS); live re-route with commitment-state safety; OCR price capture (last — manual entry is 95% of value first).
+- Model dimensions: capital/budget constraint; multi-commodity fill (bin-pack two sell constraints); loop closure / return-to-base; fees (ledger has the field; profit likely ignores it); chain-level staleness (surface worst link); contraband flag/filter; ship box+docking feasibility.
+- Data leverage — the routes feed is richer than we use: evaluate scu_reachable (pre-computed reachable SCU we may be recomputing); use infra flags has_freight_elevator/has_loading_dock for load-mode (calibration) and has_docking_port/is_space_station/is_on_ground for docking feasibility; game_version is present on routes (unlike prices_all) — usable for version staleness.
+- Passive leg-timestamp capture in the ledger to feed travel-time calibration from normal play.
+
 ## Notes / Findings
 
 - UEX Quantum Drives = category id 22 (section "Systems"). Quantum speed is the "Maximum Speed" attribute, unit km/s — sample 303,000 km/s for a size-1 grade-B civilian drive = ≈18.18 Gm/min, validating the QT_SPEED_GM_PER_MIN seed of 20 (close). Data is per-drive (Size/Grade/Class present), so per-ship QT is feasible later. NO spool/calibrate attribute exists in UEX data — SPOOL_CALIBRATE_MIN stays empirical (in-game measurement only). Confirmed via /api/verify-qt 2026-05-31.
@@ -149,6 +160,8 @@ Goal: a newer player can pick a route and execute it end-to-end without getting 
 
 ### Major
 
+- Auto leg-generation Scope A + couch-chaining anchor+cap — DONE 2026-06-11. lib/legSuggest.ts (+test), GET /api/plans/[id]/suggestions, "Suggest next leg" panel in PlanComposer. Candidates ranked by realizable profit; aUEC/hr uncalibrated display hint only (D7 RC3). No schema change; suggestions derive on read; accepting writes a leg via the existing /legs route. Anchor: chain tail while no items logged, else ledger position (D7 RC1); MAX_CHAIN_HOPS=5 soft cap (informational, never blocks). Bug: rapid-tap duplicate/stale legs remain (see TODO Major) — couch-chaining VERIFICATIONS entry is Pending and BLOCKED until fixed.
+- Worker fan-out resilience (W-1/W-2) — DONE 2026-06-11. getCommodityRoutes: 30s AbortSignal.timeout + 3 retry attempts (1s/3s backoff) retrying only network/5xx, not 4xx. pacedFanOut switched to Promise.allSettled returning {results, failures}. exceedsFailureThreshold (zero rows OR >10% failed) aborts run loudly; otherwise logs skip-summary and upserts what succeeded. Fixes intermittent UND_ERR_HEADERS_TIMEOUT crashes. lib/mirror.test.ts W-test still owed; worker observational VF open. See VERIFICATIONS.
 - Staleness-display beat — DONE 2026-06-08. Card label replaced "Updated Nm ago" (mirror-refresh age) with per-route price-leg data age ("prices last seen {N}" / "price age unknown"), computed as the older of the two price legs' date_modified (dataAgeUnix on RouteWithAutoLoad, derived-on-read). State-sensitive — VERIFICATIONS Pending entry owed (see CHANGELOG 2026-06-08).
 - Read-path migration / shortlist dissolution (D3) — DONE 2026-06-07. Route ranking reads from routes_mirror via lib/routesRepo.ts (getAllMirroredRoutes) instead of the live UEX per-commodity fan-out; the top-35 margin shortlist is removed, so ranking sees every commodity and the shortlist metric-mismatch bug class is gone. Verified on production (Aluminum card reconciled to the credit — see VERIFICATIONS.md). NOTE: the container_sizes intersection capacity math and out-of-stock/availability confidence work from the capacity-aware ranking item SURVIVE this — they are independent of the candidate-pool source; do not treat them as closed.
 - Card information hierarchy redesign — card headline shows primary route's realizable profit (capacity-aware); per-route realizable shown only when expanded (fixes double-count on collapsed cards); per-row qualifier contextual on capacity; total profit demoted behind expand; per-SCU on secondary line. Profit-per-hour removed from card (deferred to loop planner; lib/profitPerHour.ts retained on disk). Shipped + verified in production 2026-06-01.
@@ -166,4 +179,5 @@ Goal: a newer player can pick a route and execute it end-to-end without getting 
 
 ### Chore
 
+- Collapsed per-row container_sizes warnings into one summary line — DONE 2026-06-11.
 - .env.example with UEX_BASE_URL and UEX_API_TOKEN placeholders — done in scaffold (Prompt 1).
