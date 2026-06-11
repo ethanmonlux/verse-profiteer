@@ -67,6 +67,8 @@ type SuggestResponse = {
   heldCargo: { idCommodity: number; scu: number }[];
   suggestions: SuggestionJson[];
   blockedReason: string | null;
+  chainLength: number;
+  softCapReached: boolean;
 };
 
 const inputClass =
@@ -427,7 +429,22 @@ export default function PlanComposer({
           ) : null}
 
           {suggestData !== null && suggestData.blockedReason === null ? (
-            <ul className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
+              <div className="text-sm text-text-muted flex flex-wrap gap-x-3 gap-y-0.5">
+                {suggestData.originTerminalId !== null ? (
+                  <span>
+                    Suggesting from:{" "}
+                    {terminalName(suggestData.originTerminalId)}
+                  </span>
+                ) : null}
+                <span>
+                  chain {suggestData.chainLength}/5
+                  {suggestData.softCapReached
+                    ? " · soft cap — fly it or trim the chain"
+                    : null}
+                </span>
+              </div>
+              <ul className="flex flex-col gap-2">
               {suggestData.suggestions.map((s) => (
                 <li
                   key={`${s.idCommodity}-${s.idTerminalDestination}`}
@@ -458,7 +475,8 @@ export default function PlanComposer({
                   </button>
                 </li>
               ))}
-            </ul>
+              </ul>
+            </div>
           ) : null}
         </section>
       )}

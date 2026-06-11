@@ -132,8 +132,9 @@ const TERMINAL_INSERT_CHUNK = 100;
  * Mirror UEX commodity routes into routes_mirror. numeric columns expect string
  * input (drizzle's default numeric mode is 'string'), so number fields are
  * converted with String(...). container_sizes are normalized via
- * parseContainerSizes — when that returns null, a concise warning is logged and
- * null is stored; the row is never skipped or crashed. game_version columns are
+ * parseContainerSizes — when that returns null, null is stored; a single summary
+ * line is logged after the map if any nulls occurred. The row is never skipped or
+ * crashed. game_version columns are
  * left null (CommodityRoute carries no game_version fields). Upserts on id,
  * updating every non-id column on conflict, batched in chunks. Returns the count
  * of rows processed.
@@ -146,26 +147,17 @@ export async function upsertRoutes(routes: CommodityRoute[]): Promise<number> {
   const db = getDb();
   const now = new Date();
 
+  let nullOriginCount = 0;
+  let nullDestCount = 0;
+
   const rows = routes.map((r) => {
     const containerSizesOrigin = parseContainerSizes(r.container_sizes_origin);
-    if (containerSizesOrigin === null) {
-      console.warn(
-        `[mirror] route ${r.id}: unparseable container_sizes_origin ${JSON.stringify(
-          r.container_sizes_origin,
-        )} — storing null`,
-      );
-    }
+    if (containerSizesOrigin === null) nullOriginCount++;
 
     const containerSizesDestination = parseContainerSizes(
       r.container_sizes_destination,
     );
-    if (containerSizesDestination === null) {
-      console.warn(
-        `[mirror] route ${r.id}: unparseable container_sizes_destination ${JSON.stringify(
-          r.container_sizes_destination,
-        )} — storing null`,
-      );
-    }
+    if (containerSizesDestination === null) nullDestCount++;
 
     return {
       id: r.id,
@@ -192,6 +184,12 @@ export async function upsertRoutes(routes: CommodityRoute[]): Promise<number> {
       refreshedAt: now,
     };
   });
+
+  if (nullOriginCount > 0 || nullDestCount > 0) {
+    console.warn(
+      `[mirror] container_sizes: ${nullOriginCount} origin, ${nullDestCount} destination stored null (empty/unparseable)`,
+    );
+  }
 
   for (let i = 0; i < rows.length; i += ROUTE_INSERT_CHUNK) {
     const chunk = rows.slice(i, i + ROUTE_INSERT_CHUNK);
