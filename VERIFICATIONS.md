@@ -35,10 +35,14 @@ VF — Mirror refresh cron phase offset (escalation-gated, state-sensitive caden
 - How to verify: after the schedule change, check 2-3 consecutive worker runs' logs — confirm the routes pulled carry a newestRouteAdded stamp from the CURRENT quarter-hour grid (e.g. a :04 run sees the :01 recompute), not the previous one. Confirm no run lands before publish (would show the prior cycle).
 - Result: (pending — schedule change + log check)
 
-VF — Staleness-display label (per-route price-leg data age)  [Pending]
+VF — Staleness-display label (per-route price-leg data age)  [Pending — VALIDATED IN PRODUCTION 2026-06-11; formal date_modified cross-check still owed to close]
 - Change: card label switched from "Updated {date_added} ago" (route-row creation time) to "prices last seen {N}" / "price age unknown", computed in getTopRoutes as the older of the two price legs' date_modified (dataAgeUnix on RouteWithAutoLoad), null when either leg is missing from the prices feed. State-sensitive (staleness display).
 - How to verify: on the production board, pick a headline route. In a second tab, query commodities_prices_all and find the buy-terminal and sell-terminal price records for that commodity. Read each record's date_modified. Confirm the card's "prices last seen {N}" matches relativeAge of the OLDER (smaller) of the two date_modified values. Then find (or force, via a route whose terminal has no price record) a missing-leg case and confirm the card reads "price age unknown", not a number. Confirm the warning color shows when the age exceeds the 30-day stale threshold.
-- Result: (pending run)
+- VALIDATED in production, twice, on real in-game runs 2026-06-11:
+  - Titan Scrap → Area 18: label "16h"; board sell 3,600 vs in-game 3,524.67 (−2%).
+  - C1 Quartz → Nyx Gateway: label "20-21h" matching the mirror's Nyx Quartz sell record timestamp (06-10 22:56) to the hour; board sell 5,400 vs in-game ~4,442 (−18%).
+  - Confirms the "older of the two price legs' date_modified" computation is correct: with a fresh buy leg and a stale sell leg, the label tracks the (older) sell leg.
+- Result: VALIDATED in production (2026-06-11). NOT yet fully Completed — a formal date_modified cross-check (read both legs' date_modified in a live commodities_prices_all query and confirm the label = relativeAge of the older value, plus the missing-leg "price age unknown" case) closes it.
 
 VF — Location-origin filter (ranking-input)
 - Change: getTopRoutes originTerminal filters routes to id_terminal_origin === origin; origin picker populated only from getDistinctOriginTerminalIds() intersected with the selected systems. URL param &origin.
@@ -85,6 +89,8 @@ VF — Mirror refresh worker (Railway)  [Completed 2026-06-06]
 
 ## Completed — Calibration Runs
 
+- Buy-price honesty (mirror vs in-game) — 2026-06-11. In-game buy prices matched the mirror to the cent across runs: Scrap 3,108.87 vs 3,109; Quartz 3,562.64 vs 3,563; Copper 3,198; Pressurized Ice 4,536. Confirms the mirror's buy-side price legs are trustworthy as-is (the staleness/divergence lives on the crowdsourced SELL side, not buy).
+- UEX distance field = Gm = real QT jump distance — 2026-06-11. Confirmed on four pairs including long jumps: Port Tressler → Area 18 = 59 (59.4 in-game); Port Tressler → Nyx Gateway = 88 (88.1 in-game). UEX `distance` is trustworthy as-is; no correction factor needed for travel-time math.
 - Sell-side auto-load fee — 2026-06-01. Scrap sell at New Babbage TDD, 8 SCU @ 3,555.86/unit = 28,446 gross goods value; with auto-load fee toggled on, net proceeds = 27,958 (fee 488 deducted on the unload/sell side, same magnitude as the 488 load fee paid at purchase). Confirms: auto-load fee is charged per event on BOTH load (buy) AND unload (sell). Balance reconciliation: 779,074 + 27,958 = 807,032, matched in-game (~807,xxx). Fee model (~190 fixed + ~62/SCU per event, round-trip ~2×) considered measured/closed. Still uncaptured: clean QT wall-clock for a single leg — travel-time constants remain flagged unverified.
 
 ## Archive
