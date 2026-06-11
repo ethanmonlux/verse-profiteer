@@ -18,6 +18,11 @@ Session-continuity handoff. Start of session: read this + recent CHANGELOG.md, T
 - OPEN DECISIONS: pivot confirm; single vs multi-commodity v1; wire passive timestamps now or after pivot; trust scu_reachable/infra flags vs derive independently; box feasibility as hard constraint vs flag + ship-max-box source; fix bugs (duplicate/stale legs, terminal picker, delete drafts) now or after pivot.
 - VERIFICATIONS: couch-chaining board cross-check is Pending but BLOCKED by the dup-leg bug; worker observational VF is Pending (observational run + W-test still owed); over-sell banner VF Pending (prod spot-check owed); plus 3 carried VFs: cron phase-offset, staleness-display label, location-origin filter. See VERIFICATIONS.md.
 - NEXT BEAT: fix duplicate/stale-leg bug (unblocks couch-chaining VF), then the optimizer + workflow UI pivot.
+- C1 / SHIP-CHOICE RECON (came up after the main doc pass): four findings.
+  - "EVERY SHIP WORKS" MANDATE: the tool stays ship-AGNOSTIC, not tuned to one hull. Ship capacity AND max-box become first-class per-ship inputs via a small static table, so the same engine serves a Titan (8 SCU, small-box grid) up to a C2 (696 SCU). This settles the "tune to one ship?" question — no.
+  - C1 SPIRIT DISSOLVES TWO OPEN FORKS: it has 64 SCU as two 32-SCU grids, so it loads Quartz's 16/24/32 boxes with no trouble. At a 16-SCU-max grid the box data showed 0% of routes blocked, and a 64-SCU hold fills off a single commodity often enough that multi-commodity fill stops mattering for v1. So box-feasibility drops from hard-constraint-urgency to nice-to-have flag, and single-commodity v1 becomes clearly fine — on a C1.
+  - PATCH-CURRENT PRICES (Alpha 4.8.0, mid-2026, source starcitizen.tools — shift per patch): rent 62,370 aUEC at Traveler Rentals (Area 18, and August Dunlow Spaceport in Orison), both Stanton; buy in-game 3,118,500 aUEC at New Deal in the Crusader Showroom, Orison; real money $125 standalone / $110 warbond (time-limited sales only).
+  - RECOMMENDATION: cheapest path to test the companion loop is to RENT a C1 for 62,370 aUEC (trivial vs the million-plus profit runs) and fly the actual workflow before committing to the optimizer build — let real use pick the next altitude.
 
 ## Session state (2026-06-10 — CARGO-LEDGER SPINE MVP SHIPPED, Steps 1–5)
 
