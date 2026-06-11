@@ -45,22 +45,30 @@ export function parseContainerSizes(raw: string): number[] | null {
  * Process ids in batches, awaiting each batch fully before starting the next,
  * and pausing delayMs between batches (no pause after the final batch). This
  * protects the shared UEX 120/min rate cap — a single Promise.all over all ids
- * would burst far past it. Results are returned in the same order as `ids`.
+ * would burst far past it. Fulfilled results are collected in order; rejected
+ * calls are collected as failures (id + error) rather than crashing the run.
  */
 export async function pacedFanOut<T>(
   ids: number[],
   fn: (id: number) => Promise<T>,
   opts?: { batchSize?: number; delayMs?: number },
-): Promise<T[]> {
+): Promise<{ results: T[]; failures: { id: number; error: unknown }[] }> {
   const batchSize = opts?.batchSize ?? 10;
   const delayMs = opts?.delayMs ?? 6000;
 
   const results: T[] = [];
+  const failures: { id: number; error: unknown }[] = [];
 
   for (let i = 0; i < ids.length; i += batchSize) {
     const batch = ids.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map((id) => fn(id)));
-    results.push(...batchResults);
+    const settled = await Promise.allSettled(batch.map((id) => fn(id)));
+    settled.forEach((outcome, index) => {
+      if (outcome.status === "fulfilled") {
+        results.push(outcome.value);
+      } else {
+        failures.push({ id: batch[index], error: outcome.reason });
+      }
+    });
 
     const hasMore = i + batchSize < ids.length;
     if (hasMore) {
@@ -68,7 +76,21 @@ export async function pacedFanOut<T>(
     }
   }
 
-  return results;
+  return { results, failures };
+}
+
+// A few skipped commodities is acceptable (their existing mirror rows remain and
+// staleness derives from date_modified, so they stay honest), but a large failure
+// share or zero rows means a systemic problem and the run must fail.
+export const MAX_FANOUT_FAILURE_FRACTION = 0.1;
+
+export function exceedsFailureThreshold(
+  failureCount: number,
+  total: number,
+  rowCount: number,
+): boolean {
+  if (rowCount === 0) return true;
+  return total > 0 && failureCount > total * MAX_FANOUT_FAILURE_FRACTION;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { getDb, getPool } from "@/lib/db";
-import { pacedFanOut, upsertRoutes, upsertTerminals } from "@/lib/mirror";
+import { exceedsFailureThreshold, pacedFanOut, upsertRoutes, upsertTerminals } from "@/lib/mirror";
 import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import {
@@ -47,9 +47,20 @@ async function main(): Promise<void> {
   console.log(`[refresh-mirror] fetching routes for ${ids.length} distinct commodity ids`);
 
   // Paced fan-out protects the shared UEX 120/min cap (default batch 10 / 6s).
-  const routeArrays = await pacedFanOut(ids, (id) => getCommodityRoutes(id));
-  const allRoutes: CommodityRoute[] = routeArrays.flat();
+  const { results, failures } = await pacedFanOut(ids, (id) => getCommodityRoutes(id));
+  const allRoutes: CommodityRoute[] = results.flat();
   console.log(`[refresh-mirror] collected ${allRoutes.length} route rows`);
+
+  if (exceedsFailureThreshold(failures.length, ids.length, allRoutes.length)) {
+    console.error(
+      `[refresh-mirror] fan-out: ${failures.length}/${ids.length} commodities failed — systemic failure, aborting. Failed ids: ${failures.map((f) => f.id).join(", ")}`,
+    );
+    throw new Error(`fan-out exceeded failure threshold: ${failures.length}/${ids.length} failed`);
+  } else if (failures.length > 0) {
+    console.log(
+      `[refresh-mirror] fan-out: ${failures.length}/${ids.length} commodities failed (skipped): ${failures.map((f) => f.id).join(", ")}`,
+    );
+  }
 
   const rCount = await upsertRoutes(allRoutes);
   console.log(`[refresh-mirror] upserted ${rCount} route rows`);
