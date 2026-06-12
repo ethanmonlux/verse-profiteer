@@ -13,8 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Verse Profiteer",
-  description: "Star Citizen cargo trade route and profit planner",
+  title: "Verse Profiteer — Star Citizen Trade Route Planner",
+  description:
+    "Live market data mirror, profit-per-minute route ranking with a calibrated travel-time model, and a P&L ledger for cargo runs.",
+  metadataBase: new URL("https://verse-profiteer.vercel.app"),
+  openGraph: {
+    title: "Verse Profiteer",
+    description:
+      "Trade route planner for Star Citizen. Routes ranked by realizable profit per minute, not spreadsheet margin.",
+    url: "https://verse-profiteer.vercel.app",
+    siteName: "Verse Profiteer",
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+    type: "website",
+  },
 };
 
 export default function RootLayout({
