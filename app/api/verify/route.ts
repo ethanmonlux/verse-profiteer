@@ -1,7 +1,11 @@
-// TEMPORARY DEBUG SURFACE — ungated raw UEX passthrough. Strip or gate before public launch / monetization unpause. See TODO.
+// DEBUG SURFACE — gated by DEBUG_ROUTES=on (see lib/debugGate.ts). Returns 404 when disabled.
+import { debugGate } from "@/lib/debugGate";
 import { getMirroredRoutesByCommodity } from "@/lib/routesRepo";
 
 export async function GET(request: Request) {
+  const gated = debugGate();
+  if (gated) return gated;
+
   const { searchParams } = new URL(request.url);
   const idCommodity = searchParams.get("id_commodity");
 

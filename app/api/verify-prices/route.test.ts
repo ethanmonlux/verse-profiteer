@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach } from "vitest";
 import type { CommodityPriceRecord } from "@/lib/uex";
 
 vi.mock("@/lib/uex", () => ({
@@ -38,6 +39,7 @@ const fixturePrices: CommodityPriceRecord[] = [
 
 describe("GET /api/verify-prices", () => {
   beforeEach(() => {
+  process.env.DEBUG_ROUTES = "on";
     vi.clearAllMocks();
   });
 
@@ -58,5 +60,17 @@ describe("GET /api/verify-prices", () => {
 
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "Failed to load prices" });
+  });
+});
+
+afterEach(() => {
+  delete process.env.DEBUG_ROUTES;
+});
+
+describe("debug gate", () => {
+  it("returns 404 when DEBUG_ROUTES is not enabled", async () => {
+    delete process.env.DEBUG_ROUTES;
+    const res = await GET();
+    expect(res.status).toBe(404);
   });
 });

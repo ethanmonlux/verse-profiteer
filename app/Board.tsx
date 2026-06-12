@@ -22,9 +22,11 @@ function relativeAge(unixSeconds: number): { label: string; stale: boolean } {
 export default function Board({
   groups,
   capacity,
+  debugEnabled = false,
 }: {
   groups: CommodityRouteGroup[];
   capacity: number;
+  debugEnabled?: boolean;
 }) {
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
 
@@ -130,7 +132,7 @@ export default function Board({
                 <div className={`mt-2 text-xs ${stale ? "text-warning" : "text-text-muted"}`}>
                   {ageInfo !== null ? `prices last seen ${ageInfo.label}` : "price age unknown"}
                 </div>
-                <DebugRoutes idCommodity={group.id_commodity} />
+                {debugEnabled && <DebugRoutes idCommodity={group.id_commodity} />}
               </div>
             );
           })}
