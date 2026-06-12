@@ -9,6 +9,7 @@ import ShipPicker from "@/app/ShipPicker";
 import SystemsPicker from "@/app/SystemsPicker";
 import AutoLoadToggle from "@/app/AutoLoadToggle";
 import OriginPicker from "@/app/OriginPicker";
+import { debugRoutesEnabled } from "@/lib/debugGate";
 
 export default async function Home({
   searchParams,
@@ -16,6 +17,7 @@ export default async function Home({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
+  const debugEnabled = debugRoutesEnabled();
   const shipParam = typeof params.ship === "string" ? params.ship : undefined;
   const systemsParam = typeof params.systems === "string" ? params.systems : undefined;
   const originParam = typeof params.origin === "string" ? params.origin : undefined;
@@ -63,9 +65,13 @@ export default async function Home({
       <p className="text-sm text-text-muted mb-6">
         Top cargo trades · best routes per commodity
       </p>
-      <DebugPrices />
-      <DebugQt />
-      <DebugTerminals />
+      {debugEnabled && (
+        <>
+          <DebugPrices />
+          <DebugQt />
+          <DebugTerminals />
+        </>
+      )}
       <SystemsPicker
         selectedSystems={allowedSystems}
         currentShipId={selectedVehicle?.id}
@@ -97,7 +103,7 @@ export default async function Home({
         selectedOrigin={originTerminal}
       />
       {groups !== null && selectedVehicle !== undefined && (
-        <Board groups={groups} capacity={selectedVehicle.scu} />
+        <Board groups={groups} capacity={selectedVehicle.scu} debugEnabled={debugEnabled} />
       )}
     </main>
   );

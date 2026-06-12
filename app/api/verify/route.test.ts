@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach } from "vitest";
 import type { CommodityRoute } from "@/lib/uex";
 
 vi.mock("@/lib/routesRepo", () => ({
@@ -48,6 +49,7 @@ const fixtureRoutes: CommodityRoute[] = [
 
 describe("GET /api/verify", () => {
   beforeEach(() => {
+  process.env.DEBUG_ROUTES = "on";
     vi.clearAllMocks();
   });
 
@@ -86,5 +88,17 @@ describe("GET /api/verify", () => {
 
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "Failed to load routes" });
+  });
+});
+
+afterEach(() => {
+  delete process.env.DEBUG_ROUTES;
+});
+
+describe("debug gate", () => {
+  it("returns 404 when DEBUG_ROUTES is not enabled", async () => {
+    delete process.env.DEBUG_ROUTES;
+    const res = await GET(new Request("http://localhost/api/x?id_commodity=5"));
+    expect(res.status).toBe(404);
   });
 });
