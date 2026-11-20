@@ -1,0 +1,129 @@
+# CI standard: shared ready gate and failure loop.
+#
+# THIS FILE IS IDENTICAL IN EVERY REPO. The canonical copy is
+# ci-standard/files/.github/workflows/pr-ready.yml in ethanmonlux/staple.
+# Change it there and copy it out; do not edit it per repo.
+#
+#   mode: gate          Fails unless the pull request carries the local check
+#                       output for its current head commit (posted by
+#                       .github/ci/ci-local.sh --attach).
+#   mode: failure-loop  Runs only after another job failed. Moves the pull
+#                       request back to draft and posts one comment naming the
+#                       failed jobs with a short log excerpt.
+#
+# Neither mode runs on a draft, on a push to main, or on a manual run.
+name: PR ready
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: "gate or failure-loop"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    if: ${{ inputs.mode == 'gate' && github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Local check output is attached for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          marker="<!-- local-checks sha=${SHA} result=pass -->"
+          found=$(gh api --paginate "repos/${REPO}/issues/${PR}/comments?per_page=100" --jq '.[].body' | grep -cF -- "$marker" || true)
+          if [ "${found:-0}" -gt 0 ]; then
+            echo "Local check output found for ${SHA}."
+            exit 0
+          fi
+          echo "::error title=Local check output missing::No passing local check output is attached for ${SHA}. Run .github/ci/ci-local.sh --attach on this commit, then mark the pull request ready again."
+          exit 1
+
+  failure-loop:
+    if: ${{ inputs.mode == 'failure-loop' && github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # contents: write is what lets the built-in token return a pull request to
+    # draft; GitHub refuses that call with pull-requests: write alone. This job
+    # checks out nothing and runs no repository code.
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Return the pull request to draft and report the failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -u
+          jobs_json=$(gh api --paginate "repos/${REPO}/actions/runs/${RUN_ID}/attempts/${RUN_ATTEMPT}/jobs?per_page=100" \
+            --jq '[.jobs[] | select(.conclusion == "failure") | {id, name, step: ([.steps[]? | select(.conclusion == "failure") | .name] | first // "")}]' | jq -s 'add // []')
+          count=$(echo "$jobs_json" | jq 'length')
+          if [ "$count" -eq 0 ]; then
+            echo "No failed job found in this run; nothing to report."
+            exit 0
+          fi
+          gh pr ready "$PR" --repo "$REPO" --undo || true
+          if [ "$(gh pr view "$PR" --repo "$REPO" --json isDraft --jq .isDraft)" = "true" ]; then
+            state="This pull request is back in draft."
+          else
+            state="It could not be moved back to draft automatically; move it by hand."
+          fi
+          body=$(mktemp)
+          {
+            echo "<!-- ci-failure-loop sha=${SHA} run=${RUN_ID} -->"
+            echo "**Ready run failed for \`${SHA:0:7}\`. ${state}**"
+            echo
+            echo "Failed jobs:"
+            echo "$jobs_json" | jq -r '.[] | "- **\(.name)**" + (if .step != "" then " (step: \(.step))" else "" end)'
+            echo
+            echo "Next: the implementer fixes this, runs the local checks, and pushes. The reviewer re-reviews only the fix, then marks the pull request ready again."
+            echo
+            echo "[Full run](${RUN_URL})"
+          } > "$body"
+          shown=0
+          for id in $(echo "$jobs_json" | jq -r '.[].id'); do
+            [ "$shown" -ge 3 ] && break
+            name=$(echo "$jobs_json" | jq -r ".[] | select(.id == ${id}) | .name")
+            log=$(mktemp)
+            if curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+                 "${GITHUB_API_URL}/repos/${REPO}/actions/jobs/${id}/logs" 2>/dev/null \
+                 | sed -E 's/\x1b\[[0-9;]*[A-Za-z]//g' > "$log" && [ -s "$log" ]; then
+              total=$(wc -l < "$log")
+              line=$(grep -n '##\[error\]' "$log" | head -1 | cut -d: -f1)
+              [ -z "$line" ] && line=$total
+              start=$((line > 25 ? line - 25 : 1))
+              {
+                echo
+                echo "<details><summary>Log excerpt: ${name}</summary>"
+                echo
+                echo '```text'
+                sed -n "${start},$((line + 5))p" "$log" | sed -E 's/^[0-9T:.-]+Z //' | cut -c1-300 | sed 's/```/` ` `/g'
+                echo '```'
+                echo
+                echo "</details>"
+              } >> "$body"
+              shown=$((shown + 1))
+            fi
+          done
+          gh pr comment "$PR" --repo "$REPO" --body-file "$body"
+          if [ "$(gh pr view "$PR" --repo "$REPO" --json isDraft --jq .isDraft)" != "true" ]; then
+            echo "::error::Could not return the pull request to draft."
+            exit 1
+          fi

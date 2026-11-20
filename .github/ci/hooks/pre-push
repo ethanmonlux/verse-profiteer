@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# CI standard: pre-push hook. IDENTICAL IN EVERY REPO (canonical copy:
+# ci-standard/files/.github/ci/hooks/pre-push in ethanmonlux/staple).
+#
+# Enable once per clone:  git config core.hooksPath .github/ci/hooks
+#
+# Blocks a branch push when the local checks fail for the checked-out commit,
+# and attaches the output to the pull request when one already exists.
+root=$(git rev-parse --show-toplevel) || exit 0
+head=$(git rev-parse HEAD)
+run=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_ref" in refs/heads/*) ;; *) continue ;; esac
+  case "$local_sha" in *[!0]*) ;; *) continue ;; esac
+  if [ "$local_sha" = "$head" ]; then
+    run=1
+  else
+    echo "pre-push: $local_ref is not the checked-out commit; local checks were not run for it" >&2
+  fi
+done
+[ "$run" = 1 ] || exit 0
+if ! "$root/.github/ci/ci-local.sh" </dev/null; then
+  echo "pre-push: local checks failed; push blocked. Fix them and push again." >&2
+  exit 1
+fi
+if gh pr view --json number >/dev/null 2>&1; then
+  "$root/.github/ci/ci-local.sh" --attach </dev/null || echo "pre-push: could not attach the output; run .github/ci/ci-local.sh --attach" >&2
+fi
+exit 0
