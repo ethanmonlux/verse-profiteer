@@ -1,0 +1,5 @@
+# One command per line, run from the repo root before every push.
+# Fast checks only: lint, typecheck, unit tests.
+npm run lint
+npm run typecheck
+npm run test
