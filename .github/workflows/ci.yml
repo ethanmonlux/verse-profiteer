@@ -8,6 +8,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -51,7 +54,23 @@ jobs:
       contents: write
       pull-requests: write
 
-  # CI standard: a failed ready run returns the pull request to draft with a comment.
+  # CI standard: the one required check ("ready / summary"). Passes only when
+  # every suite that ran on this commit passed. List every other job except
+  # failure-loop in `needs`.
+  ready:
+    needs: [ci, gate]
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+    uses: ./.github/workflows/pr-ready.yml
+    with:
+      mode: summary
+      needs: ${{ toJSON(needs) }}
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+
+  # CI standard: a failed ready run returns the pull request to draft with a
+  # comment. List every other job except ready in `needs`.
   failure-loop:
     needs: [ci, gate]
     if: ${{ failure() && github.event_name == 'pull_request' }}
